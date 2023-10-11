@@ -1,0 +1,80 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// npx prisma db push
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  username  String
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id         Int         @id @default(autoincrement())
+  name       String
+  alias      String      @unique
+  attributes Attribute[]
+  products   Product[]
+  createdAt  DateTime    @default(now())
+}
+
+model Attribute {
+  id        Int       @id @default(autoincrement())
+  name      String
+  alias     String    @unique
+  category  Category  @relation(fields: [cat_id], references: [id])
+  cat_id    Int
+  options   Option[]
+  createdAt DateTime   @default(now())
+  property  Product_property[]
+}
+
+model Option {
+  id        Int       @id @default(autoincrement())
+  alias     String    
+  value     String
+  attribute Attribute @relation(fields: [attr_id], references: [id])
+  attr_id   Int
+  createdAt DateTime  @default(now())
+  property  Product_property[]
+}
+
+model Product {
+  id            Int        @id @default(autoincrement())
+  name          String
+  price         Int
+  available     Boolean    @default(true)
+  discount      Int        @default(0)
+  category      Category?  @relation(fields: [cat_id], references: [id])
+  cat_id        Int
+  properties    Product_property[]
+  images        Product_image[]
+  createdAt     DateTime   @default(now())
+}
+
+model Product_property {
+  id              Int       @id @default(autoincrement())
+  product         Product   @relation(fields: [product_id], references: [id])
+  product_id      Int
+  attribute       Attribute @relation(fields: [attribute_alias], references: [alias])
+  attribute_alias String
+  option          Option    @relation(fields: [option_id], references: [id])
+  option_id       Int
+  createdAt       DateTime  @default(now())
+}
+
+model Product_image {
+  id           Int       @id @default(autoincrement())
+  product      Product   @relation(fields: [product_id], references: [id])
+  product_id   Int
+  image        String
+  createdAt    DateTime  @default(now())
+}
