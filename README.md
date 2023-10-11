@@ -9,12 +9,17 @@ React, Redux toolKit, Typescript, Nest, Postgres(Supabase), Render.com
 
 ## Скрипты 
 `prisma:gen` - сгенерировать PrismaClient на основе файла schema.prisma.
+
 `prisma:push` - создать таблицы в базеданных на основе файла schema.prisma
+
 `prisma:seed` - заполнить таблицы данными на основе файла seed.ts
 
-`nest:dev`- запуск сервера 
+`nest:dev`- запуск сервера
+
 `react:dev` - запуск react клиента
+
 `start:dev` - запуск сервера и react клиента
+
 `nest:build` - сборка сервера
 
 
