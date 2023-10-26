@@ -1,17 +1,29 @@
 import React from 'react';
 import { Routes, Route, useSearchParams } from 'react-router-dom';
-import { useGetAllCategoriesQuery } from 'store/slices/productSlice';
+import { useGetProductsByCatIdQuery } from 'store/slices/productSlice';
 
 import AppLayout from '../components/ui/layout/AppLayout';
 
 const Products: React.FC = () => {
-  // const { data, isLoading, error } = useGetAllCategoriesQuery({});
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const queries: any = {};
+  for (let entry of searchParams.entries()) {
+    queries[entry[0]] = entry[1];
+  }
+
+  const { data, isLoading, error } = useGetProductsByCatIdQuery(queries);
 
   return (
     <AppLayout>
       <div>Товары</div>
-      {` category Id ${searchParams.get('cat')}`}
+      <ul>
+        {isLoading ? (
+          <div>...загрузка</div>
+        ) : (
+          data.data.map((p: any) => <li key={p.id}>{p.name}</li>)
+        )}
+      </ul>
     </AppLayout>
   );
 };

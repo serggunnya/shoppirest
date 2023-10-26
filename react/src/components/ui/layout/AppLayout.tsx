@@ -18,14 +18,7 @@ import { useTheme } from '@emotion/react';
 import { DrawerHeader } from '../DrawerHeader';
 import { AppBar } from '../AppBar';
 import { Main } from '../Main';
-import {
-  Link,
-  Outlet,
-  Route,
-  Routes,
-  createSearchParams,
-  useNavigate,
-} from 'react-router-dom';
+import { Link, createSearchParams, useNavigate } from 'react-router-dom';
 
 export const drawerWidth = 240;
 
@@ -53,20 +46,20 @@ const AppLayout: React.FC<{ children: any }> = (props) => {
         'загрузка'
       ) : (
         <List>
-          {data.map((p: any) => (
-            <ListItem key={p.id} disablePadding>
+          {data.map((cat: any) => (
+            <ListItem key={cat.id} disablePadding>
               <ListItemButton
                 onClick={() =>
                   navigate({
                     pathname: '/products',
                     search: createSearchParams({
                       page: '1',
-                      cat: p.id,
+                      cat_id: cat.id,
                     }).toString(),
                   })
                 }
               >
-                <ListItemText primary={p.name} />
+                <ListItemText primary={cat.name} />
               </ListItemButton>
             </ListItem>
           ))}
@@ -120,7 +113,7 @@ const AppLayout: React.FC<{ children: any }> = (props) => {
             sx={{ display: 'flex', justifyContent: 'space-between' }}
           >
             <Typography variant="h5" gutterBottom>
-              Категории
+              Каталог
             </Typography>
             <IconButton onClick={handleDrawerClose}>
               {theme.direction === 'ltr' ? (
