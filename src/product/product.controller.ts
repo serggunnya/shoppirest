@@ -4,7 +4,7 @@ import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 import { ProductService } from './product.service';
 import { ProductEntity } from './ProductEntity';
-import { IQueries } from './product.types';
+import { ISearchParams } from './product.types';
 
 @ApiTags('Products')
 @Controller('products')
@@ -13,8 +13,8 @@ export class ProductController {
 
   @Get('/')
   @ApiOkResponse({ type: ProductEntity, isArray: true })
-  allProducts(@Query() queries: IQueries) {
-    return this.productService.getProducts(queries);
+  getProductsByCatId(@Query() searchParams: ISearchParams) {
+    return this.productService.getProductsByCatId(searchParams);
   }
 
   @Get(':id')

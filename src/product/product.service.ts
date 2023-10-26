@@ -1,28 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { toWhere } from 'utils/utils';
 import { PrismaService } from '../prisma/prisma.service';
-import { IQueries } from './product.types';
+import { ISearchParams } from './product.types';
 
-const util = require('util');
+// const util = require('util');
 
 @Injectable()
 export class ProductService {
   constructor(private prisma: PrismaService) {}
 
-  async getProducts({ page = 1, limit = 5, ...filters }: IQueries) {
-    const props = Object.keys(filters);
-    const filtered = props.length ? toWhere(filters) : undefined;
-    const pageOffset = page > 0 ? limit * (page - 1) : 0;
+  async getProductsByCatId({
+    page = 1,
+    limit = 5,
+    cat_id,
+    ...filters
+  }: ISearchParams) {
+    const query = toWhere(Number(cat_id), filters);
 
-    // console.log(util.inspect(filtered, false, null, true));
+    const pageOffset = page > 0 ? limit * (page - 1) : 0;
 
     const [total, data] = await Promise.all([
       this.prisma.product.count({
-        where: filtered,
+        where: query,
       }),
       this.prisma.product.findMany({
-        where: filtered,
-        take: limit,
+        where: query,
+        take: Number(limit),
         skip: pageOffset,
       }),
     ]);
