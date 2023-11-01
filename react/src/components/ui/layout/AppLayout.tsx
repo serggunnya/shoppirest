@@ -1,30 +1,17 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import CssBaseline from '@mui/material/CssBaseline';
-import Toolbar from '@mui/material/Toolbar';
-import List from '@mui/material/List';
-import Typography from '@mui/material/Typography';
-import Divider from '@mui/material/Divider';
+import { Box, Toolbar, Typography } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemText from '@mui/material/ListItemText';
 
-import { useGetAllCategoriesQuery } from 'store/slices/productSlice';
-import { Box, Button, Drawer } from '@mui/material';
-import { useTheme } from '@emotion/react';
-import { DrawerHeader } from '../DrawerHeader';
 import { AppBar } from '../AppBar';
 import { Main } from '../Main';
-import { Link, createSearchParams, useNavigate } from 'react-router-dom';
+import SideBar from '../../sidebar/Sidebar';
 
 export const drawerWidth = 240;
 
 const AppLayout: React.FC<{ children: any }> = (props) => {
-  const { data, isLoading, error } = useGetAllCategoriesQuery({});
-
   const [open, setOpen] = React.useState(true);
 
   const handleDrawerOpen = () => {
@@ -34,39 +21,6 @@ const AppLayout: React.FC<{ children: any }> = (props) => {
   const handleDrawerClose = () => {
     setOpen(false);
   };
-
-  const navigate = useNavigate();
-  const theme: any = useTheme();
-
-  const categoriesList = (
-    <div>
-      <Button onClick={() => navigate('/')}>Home</Button>
-      <Button onClick={() => navigate('/login')}>login</Button>
-      {isLoading ? (
-        'загрузка'
-      ) : (
-        <List>
-          {data.map((cat: any) => (
-            <ListItem key={cat.id} disablePadding>
-              <ListItemButton
-                onClick={() =>
-                  navigate({
-                    pathname: '/products',
-                    search: createSearchParams({
-                      page: '1',
-                      cat_id: cat.id,
-                    }).toString(),
-                  })
-                }
-              >
-                <ListItemText primary={cat.name} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      )}
-    </div>
-  );
 
   return (
     <Box
@@ -96,40 +50,12 @@ const AppLayout: React.FC<{ children: any }> = (props) => {
             </Link>
           </Toolbar>
         </AppBar>
-        <Drawer
-          sx={{
-            width: drawerWidth,
-            flexShrink: 0,
-            '& .MuiDrawer-paper': {
-              width: drawerWidth,
-              boxSizing: 'border-box',
-            },
-          }}
-          variant="persistent"
-          anchor="left"
-          open={open}
-        >
-          <DrawerHeader
-            sx={{ display: 'flex', justifyContent: 'space-between' }}
-          >
-            <Typography variant="h5" gutterBottom>
-              Каталог
-            </Typography>
-            <IconButton onClick={handleDrawerClose}>
-              {theme.direction === 'ltr' ? (
-                <ChevronLeftIcon />
-              ) : (
-                <ChevronRightIcon />
-              )}
-            </IconButton>
-          </DrawerHeader>
-          <Divider />
-          {categoriesList}
-        </Drawer>
-        <Main open={open}>
-          <DrawerHeader />
-          {props.children}
-        </Main>
+        <SideBar
+          drawerWidth={drawerWidth}
+          isOpen={open}
+          drawerCloseHandler={handleDrawerClose}
+        />
+        <Main open={open}>{props.children}</Main>
       </Box>
       <footer>Footer</footer>
     </Box>
@@ -137,8 +63,3 @@ const AppLayout: React.FC<{ children: any }> = (props) => {
 };
 
 export default AppLayout;
-
-/*
-
-
-*/
