@@ -1,0 +1,9 @@
+.item {
+  background: #fff;
+  border-bottom: 1px solid #ccc;
+}
+
+.itemActive {
+  background: #eef7d9;
+  border-bottom: 1px solid #8bc34a;
+}
