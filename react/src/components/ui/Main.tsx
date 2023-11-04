@@ -20,4 +20,7 @@ export const Main = styled('main', {
     }),
     marginLeft: 0,
   }),
+  '@media(max-width: 600px)': {
+    marginLeft: 0,
+  },
 }));

@@ -1,25 +1,35 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Box, Toolbar, Typography } from '@mui/material';
+import {
+  Box,
+  Toolbar,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 
-import { AppBar } from '../AppBar';
 import { Main } from '../Main';
 import SideBar from '../../sidebar/Sidebar';
+import { DrawerHeader } from '../DrawerHeader';
+import { AppBar } from '../AppBar';
 
 export const drawerWidth = 240;
 
 const AppLayout: React.FC<{ children: any }> = (props) => {
-  const [open, setOpen] = React.useState(true);
+  const [desktopMenuOpen, setDesktopMenuOpen] = React.useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
-  const handleDrawerOpen = () => {
-    setOpen(true);
+  const mediaMatches = useMediaQuery(useTheme().breakpoints.up('sm'));
+
+  const handleDesktopMenuOpen = () => {
+    setDesktopMenuOpen(true);
   };
 
-  const handleDrawerClose = () => {
-    setOpen(false);
+  const handleMobileMenuOpen = () => {
+    setMobileMenuOpen(true);
   };
 
   return (
@@ -32,19 +42,40 @@ const AppLayout: React.FC<{ children: any }> = (props) => {
     >
       <Box sx={{ display: 'flex', flexGrow: 1 }}>
         <CssBaseline />
-        <AppBar position="fixed" open={open}>
+        <AppBar position="fixed" open={desktopMenuOpen && mediaMatches}>
           <Toolbar>
             <IconButton
               color="inherit"
-              aria-label="open drawer"
-              onClick={handleDrawerOpen}
+              aria-label="open desktop drawer"
+              onClick={handleDesktopMenuOpen}
               edge="start"
-              sx={{ mr: 2, ...(open && { display: 'none' }) }}
+              sx={{
+                mr: 2,
+                ...((desktopMenuOpen || !mediaMatches) && { display: 'none' }),
+              }}
             >
               <MenuIcon />
             </IconButton>
-            <Link to="/" type="div">
-              <Typography variant="h6" noWrap>
+            <IconButton
+              color="inherit"
+              aria-label="open mobile drawer"
+              onClick={handleMobileMenuOpen}
+              edge="start"
+              sx={{ mr: 2, ...(mediaMatches && { display: 'none' }) }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Link to="/" style={{ textDecoration: 'none' }}>
+              <Typography
+                variant="h6"
+                noWrap
+                sx={{
+                  fontWeight: 800,
+                  fontSize: '2rem',
+                  color: 'aliceblue',
+                  textShadow: '2px 3px 1px #000',
+                }}
+              >
                 Shoppirest
               </Typography>
             </Link>
@@ -52,10 +83,15 @@ const AppLayout: React.FC<{ children: any }> = (props) => {
         </AppBar>
         <SideBar
           drawerWidth={drawerWidth}
-          isOpen={open}
-          drawerCloseHandler={handleDrawerClose}
+          desktopMenuOpen={desktopMenuOpen}
+          mobileMenuOpen={mobileMenuOpen}
+          desktopMenuToggle={setDesktopMenuOpen}
+          mobileMenuToggle={setMobileMenuOpen}
         />
-        <Main open={open}>{props.children}</Main>
+        <Main open={desktopMenuOpen}>
+          <DrawerHeader />
+          {props.children}
+        </Main>
       </Box>
       <footer>Footer</footer>
     </Box>

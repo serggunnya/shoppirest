@@ -1,29 +1,65 @@
-import React from 'react';
-import { Drawer, Divider, Typography, IconButton } from '@mui/material';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
-import { useTheme } from '@emotion/react';
+import React, { useEffect } from 'react';
+import {
+  Drawer,
+  Divider,
+  Typography,
+  IconButton,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
+import { ChevronLeft } from '@mui/icons-material';
 
 import { DrawerHeader } from '../ui/DrawerHeader';
 import CategoriesList from '../categoriesList/CategoriesList';
 
 interface SidebarPops {
   drawerWidth: number;
-  isOpen: boolean;
-  drawerCloseHandler: () => void;
+  desktopMenuOpen: boolean;
+  mobileMenuOpen: boolean;
+  desktopMenuToggle: (set: boolean) => void;
+  mobileMenuToggle: (set: boolean) => void;
 }
 
 const SideBar: React.FC<SidebarPops> = (props) => {
-  const { drawerWidth, isOpen, drawerCloseHandler } = props;
-  const theme: any = useTheme();
+  const {
+    drawerWidth,
+    desktopMenuOpen,
+    mobileMenuOpen,
+    desktopMenuToggle,
+    mobileMenuToggle,
+  } = props;
+
+  const mediaMatches = useMediaQuery(useTheme().breakpoints.up('sm'));
+
+  useEffect(() => {
+    if (mediaMatches) {
+      mobileMenuToggle(false);
+    }
+  });
 
   const drawerContent = (
     <>
-      <DrawerHeader sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Typography variant="h5" gutterBottom>
+      <DrawerHeader
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          background: '#8BC34A',
+        }}
+      >
+        <Typography
+          variant="h5"
+          gutterBottom
+          sx={{
+            fontWeight: 800,
+            fontSize: '2rem',
+            color: '#fff',
+            margin: 0,
+          }}
+        >
           Каталог
         </Typography>
-        <IconButton onClick={drawerCloseHandler}>
-          {theme.direction === 'ltr' ? <ChevronLeft /> : <ChevronRight />}
+        <IconButton onClick={() => desktopMenuToggle(false)}>
+          <ChevronLeft sx={{ color: '#fff' }} />
         </IconButton>
       </DrawerHeader>
       <Divider />
@@ -37,12 +73,17 @@ const SideBar: React.FC<SidebarPops> = (props) => {
       <Drawer
         variant="persistent"
         anchor="left"
-        open={isOpen}
+        open={desktopMenuOpen}
         sx={{
           width: drawerWidth,
           flexShrink: 0,
           display: { xs: 'none', sm: 'block' },
-          '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' },
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+            boxShadow: '#000 -6px 1px 20px 1px',
+            border: 'none',
+          },
         }}
       >
         {drawerContent}
@@ -51,14 +92,14 @@ const SideBar: React.FC<SidebarPops> = (props) => {
       {/* Mobile*/}
       <Drawer
         variant="temporary"
-        open={isOpen}
-        onClose={drawerCloseHandler}
+        open={mobileMenuOpen}
+        onClose={() => mobileMenuToggle(false)}
         ModalProps={{
           keepMounted: true,
         }}
         sx={{
           display: { xs: 'block', sm: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+          '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' },
         }}
       >
         {drawerContent}
