@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Category, Attribute, Option } from '@prisma/client';
+import { Attribute, Category, Option } from '@prisma/client';
+
+export interface IOptionWithQuantity extends Option {
+  quantity: number;
+}
+
+export interface IAttributeWithOptions extends Attribute {
+  options: IOptionWithQuantity[];
+}
 
 export class CategoryEntity implements Category {
   @ApiProperty()
@@ -15,7 +23,7 @@ export class CategoryEntity implements Category {
   createdAt: Date;
 }
 
-export class AttributeEntity implements Attribute {
+export class AttributeEntity implements IAttributeWithOptions {
   @ApiProperty()
   id: number;
 
@@ -29,10 +37,13 @@ export class AttributeEntity implements Attribute {
   alias: string;
 
   @ApiProperty()
+  options: OptionEntity[];
+
+  @ApiProperty()
   createdAt: Date;
 }
 
-export class OptionEntity implements Option {
+export class OptionEntity implements IOptionWithQuantity {
   @ApiProperty()
   id: number;
 
@@ -46,15 +57,13 @@ export class OptionEntity implements Option {
   value: string;
 
   @ApiProperty()
-  createdAt: Date;
-}
+  quantity: number;
 
-export class AttributeEntityWithOptions extends AttributeEntity {
-  @ApiProperty({ isArray: true })
-  options: OptionEntity;
+  @ApiProperty()
+  createdAt: Date;
 }
 
 export class CategoryEntityWithAttributes extends CategoryEntity {
   @ApiProperty({ isArray: true })
-  attributes: AttributeEntityWithOptions;
+  attributes: AttributeEntity;
 }
