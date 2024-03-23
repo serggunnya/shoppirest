@@ -1,25 +1,24 @@
-import MuiAppBar from '@mui/material/AppBar';
 import { styled } from '@mui/material';
-import { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
-import { drawerWidth } from './layout/AppLayout';
+import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 
 interface AppBarProps extends MuiAppBarProps {
+  drawerWidth?: number;
   open?: boolean;
 }
 
 export const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== 'open',
-})<AppBarProps>(({ theme, open }) => ({
-  transition: theme.transitions.create(['margin', 'width'], {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
+})<AppBarProps>((props) => ({
+  transition: props.theme.transitions.create(['margin', 'width'], {
+    easing: props.theme.transitions.easing.sharp,
+    duration: props.theme.transitions.duration.leavingScreen,
   }),
-  ...(open && {
-    width: `calc(100% - ${drawerWidth}px)`,
-    marginLeft: `${drawerWidth}px`,
-    transition: theme.transitions.create(['margin', 'width'], {
-      easing: theme.transitions.easing.easeOut,
-      duration: theme.transitions.duration.enteringScreen,
+  ...(props.open && {
+    width: `calc(100% - ${props.drawerWidth}px)`,
+    marginLeft: `${props.drawerWidth}px`,
+    transition: props.theme.transitions.create(['margin', 'width'], {
+      easing: props.theme.transitions.easing.easeOut,
+      duration: props.theme.transitions.duration.enteringScreen,
     }),
   }),
 }));
