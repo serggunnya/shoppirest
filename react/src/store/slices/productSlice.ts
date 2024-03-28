@@ -10,19 +10,27 @@ interface ISearchParams {
 export const productsApi = createApi({
   reducerPath: 'productsApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${process.env.REACT_APP_API}/api/v1/`,
+    baseUrl: `${import.meta.env.VITE_APP_API_BASE}/api/v1/`,
   }),
   endpoints: (builder) => ({
     getAllCategories: builder.query({
       query: () => `categories`,
     }),
+    getCategoryById: builder.query<any, number>({
+      query: (id) => `categories/${id}`,
+    }),
     getProductsByCatId: builder.query<any, ISearchParams>({
-      query: (arg) => {
-        return { url: 'products', params: { ...arg } };
-      },
+      query: (arg) => ({ url: 'products', params: { ...arg } }),
+    }),
+    getProductById: builder.query<any, number>({
+      query: (id) => `products/${id}`,
     }),
   }),
 });
 
-export const { useGetProductsByCatIdQuery, useGetAllCategoriesQuery } =
-  productsApi;
+export const {
+  useGetAllCategoriesQuery,
+  useGetCategoryByIdQuery,
+  useGetProductsByCatIdQuery,
+  useLazyGetProductByIdQuery,
+} = productsApi;
