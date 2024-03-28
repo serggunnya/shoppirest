@@ -1,9 +1,9 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ParseIntPipe } from '@nestjs/common/pipes';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 
-import { ProductService } from './product.service';
 import { ProductEntity } from './ProductEntity';
+import { ProductService } from './product.service';
 import { ISearchParams } from './product.types';
 
 @ApiTags('Products')
@@ -18,6 +18,7 @@ export class ProductController {
   }
 
   @Get(':id')
+  @ApiParam({ name: 'id', required: true })
   @ApiOkResponse({ type: ProductEntity })
   productByid(@Param('id', ParseIntPipe) id) {
     return this.productService.getProductById(id);

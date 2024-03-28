@@ -14,7 +14,7 @@ export const toWhere = (cat_id: number, filters: IQuery): any => {
       const properties = {
         some: {
           attribute_alias: { equals: attr },
-          AND: { option: { alias: { in: String(values).split(';') } } },
+          AND: { option: { alias: { in: String(values).split('+') } } },
         },
       };
       queries.push({ properties });
