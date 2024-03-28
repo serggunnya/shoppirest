@@ -11,7 +11,7 @@
     "prisma:push": "npx prisma db push",
     "prisma:seed": "npx prisma db seed",
     "nest:dev": "rimraf server && nest start --watch",
-    "react:dev": "cd react && rimraf build && npm start",
+    "react:dev": "cd react && rimraf build && yarn start",
     "start:dev": "concurrently \"npm run nest:dev\" \"npm run react:dev\"",
     "nest:build": "rimraf server && nest build"
   },
