@@ -1,29 +1,30 @@
 {
-  "compilerOptions": {
-    "baseUrl": "./src",
-    "paths": {
-      "@components/*": ["./components/*"],
-      "@pages/*": ["./pages/*"],
-      "@hooks/*": ["./hooks/*"],
-      "@utils/*": ["./utils/*"]
-    },
-    "target": "ESNext",
-    "types": ["vite/client"],
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "downlevelIteration": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx"
-  },
-  "include": ["src"]
+	"compilerOptions": {
+		"baseUrl": "src",
+		"paths": {
+			"@/components/*": ["components/*"],
+			"@/pages/*": ["pages/*"],
+			"@/store/*": ["store/*"],
+			"@/hooks/*": ["hooks/*"],
+			"@/utils/*": ["utils/*"]
+		},
+		"target": "ESNext",
+		"types": ["vite/client"],
+		"lib": ["dom", "dom.iterable", "esnext"],
+		"allowJs": true,
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"strict": true,
+		"downlevelIteration": true,
+		"forceConsistentCasingInFileNames": true,
+		"noFallthroughCasesInSwitch": true,
+		"module": "esnext",
+		"moduleResolution": "node",
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"noEmit": true,
+		"jsx": "react-jsx"
+	},
+	"include": ["src"]
 }

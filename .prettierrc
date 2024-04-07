@@ -1,4 +1,12 @@
 {
-  "singleQuote": true,
-  "trailingComma": "all"
+	"semi": true,
+	"trailingComma": "all",
+	"printWidth": 120,
+	"useTabs": true,
+	"endOfLine": "lf",
+	"arrowParens": "always",
+	"importOrder": ["^react$", "<THIRD_PARTY_MODULES>", "^@/", "^[.]"],
+	"importOrderParserPlugins": ["typescript", "jsx"],
+	"importOrderSeparation": true,
+	"importOrderSortSpecifiers": true
 }
