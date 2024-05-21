@@ -1,37 +1,52 @@
-import { Box } from '@mui/material';
-import React from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useGetProductsByCatIdQuery } from 'store/slices/productSlice';
-import { FilterList } from '../components/filterList/FilterList';
-import ProductsList from '../components/productsList/ProductsList';
-import AppLayout from '../components/ui/layout/AppLayout';
+import React, { useState } from "react";
+
+import { Box } from "@mui/material";
+import { useSearchParams } from "react-router-dom";
+
+import { FilterList } from "@/components/filterList/FilterList";
+import ProductsList from "@/components/productsList/ProductsList";
+import AppLayout from "@/components/ui/layout/AppLayout";
+import { ISearchParams, useGetProductsByCatIdQuery } from "@/store/slices/productSlice";
 
 const drawerWidth = 240;
 
 const Products: React.FC = (props) => {
-  const [searchParams, setSearchParams] = useSearchParams();
+	const [searchParams, setSearchParams] = useSearchParams();
 
-  const queries: any = {};
-  for (let entry of searchParams.entries()) {
-    queries[entry[0]] = entry[1];
-  }
+	const mapQueries = (searchParams: URLSearchParams) => {
+		const queries: ISearchParams = { page: "1", cat_id: "1" };
+		searchParams.forEach((value, key) => (queries[key] = value));
+		return queries;
+	};
 
-  const { data, isLoading, error } = useGetProductsByCatIdQuery(queries);
+	const [queries, setQueries] = useState<ISearchParams>(mapQueries(searchParams));
 
-  return (
-    <AppLayout>
-      <Box
-        component="main"
-        sx={{ width: { sm: `calc(100% - ${drawerWidth}px)` } }}
-      >
-        <ProductsList products={data} isLoading={isLoading} />
-        <FilterList
-          categoryId={Number(searchParams?.get('cat_id'))}
-          queries={queries}
-        />
-      </Box>
-    </AppLayout>
-  );
+	const { data, isLoading, isFetching, isSuccess, error } = useGetProductsByCatIdQuery(queries);
+
+	const filterHandler = (queries: ISearchParams) => setQueries((prev) => ({ ...queries }));
+
+	const pages = Array.from(new Array(3), (_: number, i: number) => i + 1);
+
+	const changePage = (page: number) => () => {
+		setSearchParams((prev) => ({ ...prev, page: `${page}` }));
+		setQueries((prev) => ({ ...prev, page: `${page}` }));
+	};
+
+	return (
+		<AppLayout>
+			<Box component="main" sx={{ width: { sm: `calc(100% - ${240}px)` } }}>
+				<ProductsList products={data} isLoading={isLoading} isFetching={isFetching} />
+
+				<FilterList doFilter={filterHandler} />
+
+				{pages.map((p) => (
+					<button key={p} onClick={changePage(p)}>
+						{p}
+					</button>
+				))}
+			</Box>
+		</AppLayout>
+	);
 };
 
 export default Products;

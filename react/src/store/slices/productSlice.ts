@@ -1,9 +1,8 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-interface ISearchParams {
+export interface ISearchParams {
   page: string;
   cat_id: string;
-  limit: string;
   [key: string]: string;
 }
 
