@@ -1,144 +1,76 @@
-import {
-  Box,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-} from '@mui/material';
-import React, { useEffect, useState } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
-import { useGetCategoryByIdQuery } from 'store/slices/productSlice';
-import FilterDrawer from './FilterDrawer';
-import FilterPropertyItem from './FilterPropertyItem';
+import React, { useEffect, useState } from "react";
 
-interface ProductFilterProps {
-  categoryId: number;
-  queries: { [key: string]: string };
+import { Box } from "@mui/material";
+import { FormProvider, useForm } from "react-hook-form";
+import { useSearchParams } from "react-router-dom";
+
+import { ISearchParams, useGetCategoryByIdQuery } from "@/store/slices/productSlice";
+
+import FilterDrawer from "./FilterDrawer";
+import FilterPropertyItem from "./FilterPropertyItem";
+import { mapAttributesToFilterState } from "./mapAttributesToFilterState";
+
+export interface ProductFilterProps {
+	doFilter: (queries: ISearchParams) => void;
 }
 
-type Attribute = {
-  [key: string]: any;
-};
-
-type OptionType = {
-  id: number;
-  value: string;
-  alias: string;
-  quantity: number;
-  checked: boolean;
-};
-
-type AttributeType = {
-  id: number;
-  name: string;
-  alias: string;
-  options: {
-    [key: string]: OptionType;
-  };
-};
-
-interface IFilterFormState {
-  [key: string]: AttributeType;
+export interface IFilterFormState {
+	[attr_alias: string]: { [option_alias: string]: boolean };
 }
 
-const mapToFilterState = (data: any[]): IFilterFormState => {
-  const attributes = JSON.parse(JSON.stringify(data));
-  const state: IFilterFormState = {};
+export const FilterList: React.FC<ProductFilterProps> = (props) => {
+	const [searchParams, setSearchParams] = useSearchParams();
 
-  for (let i = 0; i < attributes.length; i++) {
-    const options: any = {};
-    if (attributes[i].options?.length) {
-      for (let j = 0; j < attributes[i].options.length; j++) {
-        const opt = attributes[i].options[j];
-        options[opt.alias] = opt;
-        options[opt.alias].checked = false;
-      }
-    }
+	const [filterOpen, setFilterOpen] = useState<boolean>(false);
 
-    attributes[i].options = options;
-    state[attributes[i].alias] = attributes[i];
-  }
-  return state;
-};
+	const { data, isLoading, error } = useGetCategoryByIdQuery(Number(searchParams?.get("cat_id")));
 
-export const FilterList: React.FC<ProductFilterProps> = ({
-  categoryId,
-  queries,
-}) => {
-  const [filterOpen, setFilterOpen] = useState<boolean>(false);
+	const filterOpenHandler = () => {
+		setFilterOpen(!filterOpen);
+	};
 
-  const filterOpenHandler = () => {
-    setFilterOpen(!filterOpen);
-  };
+	const formMethods = useForm<IFilterFormState>({ defaultValues: {} });
+	const { control, handleSubmit, reset } = formMethods;
 
-  const { data, isLoading, error } = useGetCategoryByIdQuery(categoryId);
+	useEffect(() => {
+		if (!isLoading) {
+			reset(mapAttributesToFilterState(data.attributes, searchParams));
+		}
+	}, [isLoading]);
 
-  const [sorting, setSorting] = useState<string>('');
+	const submit = (filterState: IFilterFormState) => {
+		/**
+ * 1) transform filterState to queries object;
+ * 2) update searchParams
+ * 3) update queries state for invoking new request products
+ *
+ * const updatedQueries: ISearchParams = { };
+	 setSearchParams(updatedQueries);
+	 props.doFilter(updatedQueries);
+ */
+	};
 
-  const sortHandler = (event: SelectChangeEvent<string>) => {
-    setSorting(event.target.value);
-  };
-
-  const formMethods = useForm<{ attributes: Attribute[] }>({
-    defaultValues: { attributes: [] },
-  });
-
-  const { control, handleSubmit, reset } = formMethods;
-
-  useEffect(() => {
-    if (!isLoading) {
-      const initialFilterState = mapToFilterState(data.attributes);
-      console.log(initialFilterState);
-    }
-  }, [isLoading]);
-
-  return (
-    <Box
-      sx={{ width: { sm: 240 }, flexShrink: { sm: 0 } }}
-      aria-label="mailbox folders"
-    >
-      <FilterDrawer
-        drawerWidth={240}
-        filterOpen={filterOpen}
-        handleFilterClose={filterOpenHandler}
-      >
-        <div>
-          {isLoading ? (
-            <div>...загрузка</div>
-          ) : (
-            <FormProvider {...formMethods}>
-              <div>
-                {data.name}
-                <FormControl sx={{ m: 1 }} size="small">
-                  <InputLabel id="select-label">Отсортировать</InputLabel>
-                  <Select
-                    labelId="select-label"
-                    value={sorting}
-                    label="sortProductsBy"
-                    onChange={sortHandler}
-                  >
-                    <MenuItem value="">
-                      <em>Невыбрано</em>
-                    </MenuItem>
-                    <MenuItem value="priceDown">Сначало дорогие</MenuItem>
-                    <MenuItem value="priceUp">Сначало дешевые</MenuItem>
-                    <MenuItem value="popular">Популярные</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <div className="property-list">
-                  {data.attributes.map((attr: any) => {
-                    return (
-                      <FilterPropertyItem key={attr.id} attribute={attr} />
-                    );
-                  })}
-                </div>
-              </div>
-            </FormProvider>
-          )}
-        </div>
-      </FilterDrawer>
-    </Box>
-  );
+	return (
+		<Box sx={{ width: { sm: 240 }, flexShrink: { sm: 0 } }}>
+			<FilterDrawer drawerWidth={240} filterOpen={filterOpen} handleFilterClose={filterOpenHandler}>
+				<div>
+					{isLoading ? (
+						<div>...Loading</div>
+					) : (
+						<FormProvider {...formMethods}>
+							<div>
+								{data.name}
+								<div className="property-list">
+									{data.attributes.map((attr: any) => {
+										return <FilterPropertyItem key={attr.id} attribute={attr} />;
+									})}
+								</div>
+								<button onClick={handleSubmit(submit)}>Filter</button>
+							</div>
+						</FormProvider>
+					)}
+				</div>
+			</FilterDrawer>
+		</Box>
+	);
 };
