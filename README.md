@@ -1,33 +1,46 @@
 ## Приложение Интернет магазин.
-React, Redux toolKit, Typescript, Nest, Postgres(Supabase), Render.com
 
-- [ ] - Получение списка товаров
-- [ ] - Получение категории с атрибутами поиска
+React, RTK query, Typescript, Nest, Postgres(Supabase), hosting (Render.com)
+
+- [x] - Получение списка товаров
+- [x] - Получение категории с атрибутами поиска
 - [ ] - Постраничная навигация
 - [ ] - Получение данных товара (описание, параметры и изображения)
+- [ ] - Фильтрация товаров
 - [ ] - JWT Авторизация и аутентификация
 
-## Скрипты 
-`prisma:gen` - сгенерировать PrismaClient на основе файла schema.prisma.
+### Клиентское React приложение
 
-`prisma:push` - создать таблицы в базеданных на основе файла schema.prisma
+- https://shoppirest.onrender.com
 
-`prisma:seed` - заполнить таблицы данными на основе файла seed.ts
+### Swagger спецификации API эндпоинтов
 
-`nest:dev`- запуск сервера
+- https://shoppirest-api.onrender.com/docs
 
-`react:dev` - запуск react клиента
+### База данных
+
+![схема](schema.png?raw=true)
+
+#### Скрипты (package.json)
+
+`nest:dev`- запуск сервера в режиме разработки
+
+`react:dev` - запуск react клиента в режиме разработки
 
 `start:dev` - запуск сервера и react клиента
 
 `nest:build` - сборка сервера
 
+`prisma:gen` - сгенерировать PrismaClient на основе файла schema.prisma.
 
-## Переменные окружения 
+`prisma:push` - создать таблицы в базе данных на основе файла schema.prisma
+
+`prisma:seed` - заполнить таблицы данными на основе файла seed.ts
+
+#### Переменные окружения
+
 SUPABASE_URL=""
 SUPABASE_KEY=""
 DATABASE_URL=""
 ACCESS_SECRET=""
 REFRESH_SECRET=""
-
-![схема](schema.jpg?raw=true)
