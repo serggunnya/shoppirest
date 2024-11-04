@@ -5,6 +5,7 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
+  output = "../node_modules/.prisma/client"
 }
 
 // npx prisma db push
@@ -20,7 +21,6 @@ model User {
 model Category {
   id         Int         @id @default(autoincrement())
   name       String
-  alias      String      @unique
   attributes Attribute[]
   products   Product[]
   createdAt  DateTime    @default(now())
@@ -39,8 +39,8 @@ model Attribute {
 
 model Option {
   id        Int       @id @default(autoincrement())
-  alias     String    
-  value     String
+  alias     String
+  value     String    
   attribute Attribute @relation(fields: [attr_id], references: [id])
   attr_id   Int
   createdAt DateTime  @default(now())
@@ -64,10 +64,10 @@ model Product_property {
   id              Int       @id @default(autoincrement())
   product         Product   @relation(fields: [product_id], references: [id])
   product_id      Int
-  attribute       Attribute @relation(fields: [attribute_alias], references: [alias])
-  attribute_alias String
-  option          Option    @relation(fields: [option_id], references: [id])
-  option_id       Int
+  attribute       Attribute @relation(fields: [attr_alias], references: [alias])
+  attr_alias      String
+  option          Option    @relation(fields: [opt_id], references: [id])
+  opt_id          Int
   createdAt       DateTime  @default(now())
 }
 
@@ -75,6 +75,6 @@ model Product_image {
   id           Int       @id @default(autoincrement())
   product      Product   @relation(fields: [product_id], references: [id])
   product_id   Int
-  image        String
+  name         String    @default("default.png")
   createdAt    DateTime  @default(now())
 }
