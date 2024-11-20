@@ -10,7 +10,7 @@ import { ISearchParams } from "./product.types";
 export class ProductService {
 	constructor(private prisma: PrismaService) {}
 
-	async getProductsByCatId({ page = 1, limit = 5, cat_id, ...filters }: ISearchParams) {
+	async getProductsByCatIdV1({ page = 1, limit = 5, cat_id, ...filters }: ISearchParams) {
 		const query = toWhere(Number(cat_id), filters);
 
 		const pageOffset = page > 0 ? limit * (page - 1) : 0;
@@ -38,9 +38,13 @@ export class ProductService {
 		};
 	}
 
+	async getProductsByCatIdV2({ page = 1, limit = 5, cat_id, ...filters }: ISearchParams) {
+		return "products v2";
+	}
+
 	async getProductById(id: number) {
 		return await this.prisma.product.findMany({
-			include: { properties: { include: { option: true } } },
+			include: { properties: true },
 			where: { id },
 		});
 	}

@@ -1,25 +1,28 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Product } from '@prisma/client';
+import { ApiProperty } from "@nestjs/swagger";
+import { Product } from "@prisma/client";
 
 export class ProductEntity implements Product {
-  @ApiProperty()
-  id: number;
+	@ApiProperty()
+	id: number;
 
-  @ApiProperty()
-  cat_id: number;
+	@ApiProperty()
+	cat_id: number;
 
-  @ApiProperty()
-  name: string;
+	@ApiProperty()
+	name: string;
 
-  @ApiProperty()
-  price: number;
+	@ApiProperty()
+	description: string;
 
-  @ApiProperty()
-  discount: number;
+	@ApiProperty()
+	price: number;
 
-  @ApiProperty()
-  available: boolean;
+	@ApiProperty()
+	discount: number;
 
-  @ApiProperty()
-  createdAt: Date;
+	@ApiProperty()
+	available: boolean;
+
+	@ApiProperty()
+	createdAt: Date;
 }
