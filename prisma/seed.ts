@@ -1,31 +1,31 @@
 // import { PrismaClient, Prisma } from '@prisma/client';
-import { categories } from "./data/categories";
-import { Product_properties, products } from "./data/products";
+import { attributes, categories } from "./data/categories";
+import { products } from "./data/products";
 import { Prisma, PrismaClient } from ".prisma/client";
 
 const prisma = new PrismaClient();
 
-const users: Prisma.UserCreateInput[] = [
+const users: Prisma.UsersCreateInput[] = [
 	{
 		username: "Admin admin",
 		email: "admin@gmail.com",
 		password:
 			"$argon2i$v=19$m=4096,t=3,p=1$ZtyJl0CRjocXKfOVlokgaQ$Xq0kqgBVvGeDBeFUSFrVP/OBY+cEziu3yCnjkCJz8rs",
-		role: "ADMIN",
+		role: "ROLE_ADMIN",
 	},
 	{
 		username: "User user",
 		email: "user@gmail.com",
 		password:
 			"$argon2i$v=19$m=4096,t=3,p=1$ZtyJl0CRjocXKfOVlokgaQ$Xq0kqgBVvGeDBeFUSFrVP/OBY+cEziu3yCnjkCJz8rs",
-		role: "USER",
+		role: "ROLE_USER",
 	},
 ];
 
 async function main() {
 	console.log(`Start seeding ...`);
 	for (const u of users) {
-		const user = await prisma.user.create({ data: u });
+		const user = await prisma.users.create({ data: u });
 		console.log(`Created user with id: ${user.id}`);
 	}
 
@@ -34,15 +34,16 @@ async function main() {
 		console.log(`Created category with id: ${category.id}`);
 	}
 
-	for (const p of products) {
-		const product = await prisma.product.create({ data: p });
-		console.log(`Created category with id: ${product.id}`);
+	for (const attr of attributes) {
+		const attribute = await prisma.attribute.create({ data: attr });
+		console.log(`Created attribute with id: ${attribute.id}`);
 	}
 
-	for (const prop of Product_properties) {
-		const property = await prisma.product_property.create({ data: prop });
-		console.log(`Created property with id: ${property.id}`);
+	for (const p of products) {
+		const product = await prisma.product.create({ data: p });
+		console.log(`Created product with id: ${product.id}`);
 	}
+
 	console.log(`Seeding finished.`);
 }
 

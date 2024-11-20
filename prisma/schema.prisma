@@ -9,72 +9,90 @@ generator client {
 }
 
 // npx prisma db push
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  username  String
-  role      String   @default("USER")
-  createdAt DateTime @default(now())
-}
-
 model Category {
-  id         Int         @id @default(autoincrement())
-  name       String
-  attributes Attribute[]
-  products   Product[]
-  createdAt  DateTime    @default(now())
-}
-
-model Attribute {
-  id        Int       @id @default(autoincrement())
-  name      String
-  alias     String    @unique
-  category  Category  @relation(fields: [cat_id], references: [id])
-  cat_id    Int
-  options   Option[]
-  createdAt DateTime   @default(now())
-  property  Product_property[]
-}
-
-model Option {
-  id        Int       @id @default(autoincrement())
-  alias     String
-  value     String    
-  attribute Attribute @relation(fields: [attr_id], references: [id])
-  attr_id   Int
-  createdAt DateTime  @default(now())
-  property  Product_property[]
+  id            Int         @id @default(autoincrement())
+  name          String
+  products      Product[]
+  createdAt     DateTime    @default(now())
 }
 
 model Product {
-  id            Int        @id @default(autoincrement())
+  id            Int         @id @default(autoincrement())
   name          String
+  description   String
   price         Int
-  available     Boolean    @default(true)
-  discount      Int        @default(0)
-  category      Category?  @relation(fields: [cat_id], references: [id])
+  available     Boolean     @default(true)
+  discount      Int         @default(0)
   cat_id        Int
+  category      Category  @relation(fields: [cat_id], references: [id])
   properties    Product_property[]
-  images        Product_image[]
-  createdAt     DateTime   @default(now())
+  images        Product_images[]
+  items         Cart_items[]
+  reviews       Reviews[]
+  createdAt     DateTime    @default(now())
+}
+
+model Attribute {
+  id            Int         @id @default(autoincrement())
+  name          String
+  alias         String      @unique
+  property      Product_property[]
+  createdAt     DateTime    @default(now())
 }
 
 model Product_property {
-  id              Int       @id @default(autoincrement())
-  product         Product   @relation(fields: [product_id], references: [id])
-  product_id      Int
-  attribute       Attribute @relation(fields: [attr_alias], references: [alias])
-  attr_alias      String
-  option          Option    @relation(fields: [opt_id], references: [id])
-  opt_id          Int
-  createdAt       DateTime  @default(now())
+  id            Int         @id @default(autoincrement())
+  prod_id       Int
+  product       Product    @relation(fields: [prod_id], references: [id])
+  attr_alias    String
+  attribute     Attribute  @relation(fields: [attr_alias], references: [alias])
+  option_value  String
+  option_alias  String
+  createdAt     DateTime    @default(now())
 }
 
-model Product_image {
-  id           Int       @id @default(autoincrement())
-  product      Product   @relation(fields: [product_id], references: [id])
-  product_id   Int
-  name         String    @default("default.png")
-  createdAt    DateTime  @default(now())
+model Product_images {
+  id            Int         @id @default(autoincrement())
+  product       Product    @relation(fields: [product_id], references: [id])
+  product_id    Int
+  name          String      @default("default.png")
+  createdAt     DateTime    @default(now())
+}
+
+model Users {
+  id            Int         @id @default(autoincrement())
+  email         String      @unique
+  password      String
+  username      String
+  role          String      @default("ROLE_USER")
+  cart          Cart[]
+  reviews       Reviews[]
+  createdAt     DateTime    @default(now())
+}
+
+model Cart {
+  id            Int         @id @default(autoincrement())
+  user_id       Int         
+  users         Users       @relation(fields: [user_id], references: [id])
+  items         Cart_items[]
+  createdAt     DateTime    @default(now())
+}
+
+model Cart_items {
+  id            Int         @id @default(autoincrement())
+  cart_id       Int         
+  carts         Cart       @relation(fields: [cart_id], references: [id])
+  prod_id       Int         
+  product       Product    @relation(fields: [prod_id], references: [id])
+  createdAt     DateTime    @default(now())
+}
+
+model Reviews {
+  id            Int         @id @default(autoincrement())
+  user_id       Int         
+  users         Users       @relation(fields: [user_id], references: [id])
+  prod_id       Int         
+  product       Product    @relation(fields: [prod_id], references: [id])
+  text          String
+  createdAt     DateTime    @default(now())
 }
