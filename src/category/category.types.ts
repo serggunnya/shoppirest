@@ -1,69 +1,28 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Attribute, Category, Option } from '@prisma/client';
+import { ApiProperty } from "@nestjs/swagger";
 
-export interface IOptionWithQuantity extends Option {
-  quantity: number;
-}
-
-export interface IAttributeWithOptions extends Attribute {
-  options: IOptionWithQuantity[];
-}
+import { Attribute, Category } from ".prisma/client";
 
 export class CategoryEntity implements Category {
-  @ApiProperty()
-  id: number;
+	@ApiProperty()
+	id: number;
 
-  @ApiProperty()
-  name: string;
+	@ApiProperty()
+	name: string;
 
-  @ApiProperty()
-  alias: string;
-
-  @ApiProperty()
-  createdAt: Date;
+	@ApiProperty()
+	createdAt: Date;
 }
 
-export class AttributeEntity implements IAttributeWithOptions {
-  @ApiProperty()
-  id: number;
+export class AttributeEntity implements Attribute {
+	@ApiProperty()
+	id: number;
 
-  @ApiProperty()
-  cat_id: number;
+	@ApiProperty()
+	name: string;
 
-  @ApiProperty()
-  name: string;
+	@ApiProperty()
+	alias: string;
 
-  @ApiProperty()
-  alias: string;
-
-  @ApiProperty()
-  options: OptionEntity[];
-
-  @ApiProperty()
-  createdAt: Date;
-}
-
-export class OptionEntity implements IOptionWithQuantity {
-  @ApiProperty()
-  id: number;
-
-  @ApiProperty()
-  attr_id: number;
-
-  @ApiProperty()
-  alias: string;
-
-  @ApiProperty()
-  value: string;
-
-  @ApiProperty()
-  quantity: number;
-
-  @ApiProperty()
-  createdAt: Date;
-}
-
-export class CategoryEntityWithAttributes extends CategoryEntity {
-  @ApiProperty({ isArray: true })
-  attributes: AttributeEntity;
+	@ApiProperty()
+	createdAt: Date;
 }
