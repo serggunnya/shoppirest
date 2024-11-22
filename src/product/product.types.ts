@@ -1,6 +1,5 @@
-export interface ISearchParams {
-  page: number;
-  cat_id: number;
-  limit: number;
-  [key: string]: number | string;
+export interface IProductParams {
+	cat_id: number;
+	page?: number;
+	limit?: number;
 }

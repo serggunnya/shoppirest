@@ -1,10 +1,10 @@
-import { Controller, Get, Param, Query, Version } from "@nestjs/common";
+import { Body, Controller, Get, Param, Query, Version } from "@nestjs/common";
 import { ParseIntPipe } from "@nestjs/common/pipes";
 import { ApiOkResponse, ApiParam, ApiTags } from "@nestjs/swagger";
 
 import { ProductEntity } from "./ProductEntity";
 import { ProductService } from "./product.service";
-import { ISearchParams } from "./product.types";
+import { IProductParams } from "./product.types";
 
 @ApiTags("Products")
 @Controller("products")
@@ -14,15 +14,35 @@ export class ProductController {
 	@Version("1")
 	@Get("/")
 	@ApiOkResponse({ type: ProductEntity, isArray: true })
-	getProductsByCatIdV1(@Query() searchParams: ISearchParams) {
-		return this.productService.getProductsByCatIdV1(searchParams);
+	getProductsByCategoryIdV1(
+		@Query() params: IProductParams,
+		@Body() filters: { [key: string]: string },
+	) {
+		return this.productService.getProductsByCategoryIdV1(params, filters);
 	}
 
 	@Version("2")
 	@Get("/")
 	@ApiOkResponse({ type: ProductEntity, isArray: true })
-	getProductsByCatIdV2(@Query() searchParams: ISearchParams) {
-		return this.productService.getProductsByCatIdV2(searchParams);
+	getProductsByCategoryIdV2(
+		@Query() params: IProductParams,
+		@Body() filters: { [key: string]: string },
+	) {
+		return this.productService.getProductsByCategoryIdV2(params, filters);
+	}
+
+	@Version("1")
+	@Get("/facets")
+	@ApiOkResponse({ type: ProductEntity, isArray: true })
+	getFacetsByCatIdV1(@Query() params: IProductParams, @Body() filters: { [key: string]: string }) {
+		return this.productService.getFacetsByCatIdV1(params, filters);
+	}
+
+	@Version("2")
+	@Get("/facets")
+	@ApiOkResponse({ type: ProductEntity, isArray: true })
+	getFacetsByCatIdV2(@Query() params: IProductParams, @Body() filters: { [key: string]: string }) {
+		return this.productService.getFacetsByCatIdV2(params, filters);
 	}
 
 	@Get(":id")
