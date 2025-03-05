@@ -24,5 +24,8 @@ export class AttributeEntity implements Attribute {
 	alias: string;
 
 	@ApiProperty()
+	type: number;
+
+	@ApiProperty()
 	createdAt: Date;
 }
