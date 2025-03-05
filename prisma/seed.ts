@@ -1,5 +1,5 @@
 // import { PrismaClient, Prisma } from '@prisma/client';
-import { attributes, categories } from "./data/categories";
+import { attributes, categories, category_attribute } from "./data/categories";
 import { products } from "./data/products";
 import { Prisma, PrismaClient } from ".prisma/client";
 
@@ -37,6 +37,11 @@ async function main() {
 	for (const attr of attributes) {
 		const attribute = await prisma.attribute.create({ data: attr });
 		console.log(`Created attribute with id: ${attribute.id}`);
+	}
+
+	for (const ca of category_attribute) {
+		const cat_attr = await prisma.category_attribute.create({ data: ca });
+		console.log(`Created cat_attr with id: ${cat_attr.id}`);
 	}
 
 	for (const p of products) {

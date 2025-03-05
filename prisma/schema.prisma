@@ -8,11 +8,42 @@ generator client {
   output = "../node_modules/.prisma/client"
 }
 
+model Users {
+  id            Int         @id @default(autoincrement())
+  email         String      @unique
+  password      String
+  username      String
+  role          String      @default("ROLE_USER")
+  cart          Cart[]
+  reviews       Reviews[]
+  createdAt     DateTime    @default(now())
+}
+
 // npx prisma db push
 model Category {
   id            Int         @id @default(autoincrement())
   name          String
   products      Product[]
+  attributes    Category_attribute[]
+  createdAt     DateTime    @default(now())
+}
+
+model Attribute {
+  id            Int         @id @default(autoincrement())
+  name          String
+  alias         String      @unique
+  type          Int  
+  category      Category_attribute[]
+  createdAt     DateTime    @default(now())
+  // suffix        String?
+}
+
+model Category_attribute {
+  id            Int         @id @default(autoincrement())  
+  category_id   Int
+  attribute_id  Int
+  category      Category    @relation(fields: [category_id], references: [id])
+  attributes    Attribute   @relation(fields: [attribute_id], references: [id])
   createdAt     DateTime    @default(now())
 }
 
@@ -24,51 +55,22 @@ model Product {
   available     Boolean     @default(true)
   discount      Int         @default(0)
   cat_id        Int
-  category      Category  @relation(fields: [cat_id], references: [id])
-  properties    Product_property[]
+  category      Category    @relation(fields: [cat_id], references: [id])
+  properties    Json        @db.JsonB
   images        Product_images[]
   items         Cart_items[]
   reviews       Reviews[]
   createdAt     DateTime    @default(now())
 }
 
-model Attribute {
-  id            Int         @id @default(autoincrement())
-  name          String
-  alias         String      @unique
-  property      Product_property[]
-  createdAt     DateTime    @default(now())
-}
-
-model Product_property {
-  id            Int         @id @default(autoincrement())
-  prod_id       Int
-  product       Product    @relation(fields: [prod_id], references: [id])
-  attr_alias    String
-  attribute     Attribute  @relation(fields: [attr_alias], references: [alias])
-  option_value  String
-  option_alias  String
-  createdAt     DateTime    @default(now())
-}
-
 model Product_images {
   id            Int         @id @default(autoincrement())
-  product       Product    @relation(fields: [product_id], references: [id])
+  product       Product     @relation(fields: [product_id], references: [id])
   product_id    Int
   name          String      @default("default.png")
   createdAt     DateTime    @default(now())
 }
 
-model Users {
-  id            Int         @id @default(autoincrement())
-  email         String      @unique
-  password      String
-  username      String
-  role          String      @default("ROLE_USER")
-  cart          Cart[]
-  reviews       Reviews[]
-  createdAt     DateTime    @default(now())
-}
 
 model Cart {
   id            Int         @id @default(autoincrement())
@@ -81,9 +83,9 @@ model Cart {
 model Cart_items {
   id            Int         @id @default(autoincrement())
   cart_id       Int         
-  carts         Cart       @relation(fields: [cart_id], references: [id])
+  carts         Cart        @relation(fields: [cart_id], references: [id])
   prod_id       Int         
-  product       Product    @relation(fields: [prod_id], references: [id])
+  product       Product     @relation(fields: [prod_id], references: [id])
   createdAt     DateTime    @default(now())
 }
 
@@ -92,7 +94,7 @@ model Reviews {
   user_id       Int         
   users         Users       @relation(fields: [user_id], references: [id])
   prod_id       Int         
-  product       Product    @relation(fields: [prod_id], references: [id])
+  product       Product     @relation(fields: [prod_id], references: [id])
   text          String
   createdAt     DateTime    @default(now())
 }
