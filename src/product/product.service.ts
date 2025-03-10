@@ -6,13 +6,16 @@ import combineFilters from "utils/combineFilters";
 
 import { PrismaService } from "../prisma/prisma.service";
 import {
-	IAttributeEntity,
-	IFacetsResponse,
-	INumericOptionEntity,
-	IProductEntity,
-	IProductsResponse,
-	ITextOptionEntity,
-} from "./product.types";
+	IAttribute,
+	IAttributeMap,
+	IAttributeWithOptions,
+	IFacets,
+	IFilters,
+	INumericOption,
+	IProduct,
+	IProductsWithMeta,
+	ITextOption,
+} from "./interfaces/product.interface";
 
 var hash = require("object-hash");
 
@@ -20,10 +23,10 @@ var hash = require("object-hash");
 export class ProductService {
 	constructor(private prisma: PrismaService, @Inject(CACHE_MANAGER) private cacheService: Cache) {}
 
-	//---------------------------------------------------------------------------
+	// Возвращает товары с метаданными для пагинации для текущей категории
 	async getProductsByCategoryIdV1(
 		{ cat_id, page = 1, limit = 5 },
-		filters: { [key: string]: any },
+		filters: IFilters,
 	) {
 		let withFilters: Prisma.Sql;
 		if (Object.keys(filters).length !== 0) {
@@ -45,18 +48,52 @@ export class ProductService {
 				currentPage: Number(page),
 				lastPage: Math.ceil(total[0].count / Number(limit)),
 			},
-		} as IProductsResponse;
+		} as IProductsWithMeta;
 	}
 
-	//---------------------------------------------------------------------------
-
-	async getFacetsByCategoryIdV1({ cat_id }, filters: { [key: string]: any }) {
+	// Возвращает фасеты с посчитаными товарами для текущей категории
+	async getFacetsByCategoryIdV1({ cat_id }, filters: IFilters) {
 		let withFilters: Prisma.Sql;
 		if (Object.keys(filters).length !== 0) {
 			withFilters = await this._withFilters(Number(cat_id), filters);
 		}
 
-		const attributes = await this._getAttributes(Number(cat_id));
+		const attrMap: IFacets = await this._getAttributes(Number(cat_id));
+
+		const options = [
+			...(await this._getTextOptions(Number(cat_id), withFilters)),
+			...(await this._getNumericOptions(Number(cat_id))),
+		];
+
+		for (let o of options) {
+			attrMap[o.alias].options.push(o);
+		}
+
+		return attrMap;
+	}
+
+	// Получает товар по id
+	async getProductById(id: number) {
+		return await this.prisma.product.findMany({
+			where: { id },
+			include: { images: true },
+		});
+	}
+
+	// Получает и сохраняет в кэш словарь атрибутов для текущей категории
+	async _getAttributes(cat_id: number): Promise<IAttributeMap> {
+		
+		const cachedAttributes = await this.cacheService.get<IAttributeMap>(`${cat_id}::attrMap`);
+
+		if (cachedAttributes) {
+			return cachedAttributes;
+		}
+
+		const attributes: IAttribute[] = await this.prisma.$queryRaw`
+			SELECT a.* FROM "Attribute" a
+			JOIN "Category_attribute" ca on ca.attribute_id = a.id
+			where ca.category_id = ${cat_id} GROUP BY a.id
+			`;
 
 		attributes.push({
 			id: 0,
@@ -66,52 +103,19 @@ export class ProductService {
 			createdAt: new Date(),
 		});
 
-		const options = [
-			...(await this._getTextOptions(Number(cat_id), withFilters)),
-			...(await this._getNumericOptions(Number(cat_id))),
-		];
-
-		const attrMap = new Map();
+		const attrMap: IAttributeMap = {};
 		for (let attr of attributes) {
-			(attr as IFacetsResponse).options = [];
-			attrMap.set(attr.alias, attr);
+			const attrWithOptions: IAttributeWithOptions = { ...attr, options: [] };
+			attrMap[attr.alias] = attrWithOptions;
 		}
 
-		for (let opt of options) {
-			attrMap.get(opt.alias).options.push(opt);
-		}
+		await this.cacheService.set(`${cat_id}::attrMap`, attrMap, 1000 * 60 * 10);
 
-		return attributes as IFacetsResponse[];
+		return attrMap;
 	}
 
-	//---------------------------------------------------------------------------
-	async getProductById(id: number) {
-		return await this.prisma.product.findMany({ where: { id } });
-	}
-
-	//---------------------------------------------------------------------------
-	async _getAttributes(cat_id: number): Promise<IAttributeEntity[]> {
-		const cachedAttributes = await this.cacheService.get<IAttributeEntity[]>(
-			`${cat_id}::attributes`,
-		);
-
-		if (cachedAttributes) {
-			return cachedAttributes;
-		}
-
-		const attributes: IAttributeEntity[] = await this.prisma.$queryRaw`
-			SELECT a.* FROM "Attribute" a
-			JOIN "Category_attribute" ca on ca.attribute_id = a.id
-			where ca.category_id = ${cat_id} GROUP BY a.id
-			`;
-
-		await this.cacheService.set(`${cat_id}::attributes`, attributes, 1000 * 60 * 10);
-
-		return attributes;
-	}
-
-	//---------------------------------------------------------------------------
-	async _getTextOptions(cat_id: number, withFilters): Promise<ITextOptionEntity[]> {
+	// Получает текстовые опции аттрибутов для текущей категории
+	async _getTextOptions(cat_id: number, withFilters): Promise<ITextOption[]> {
 		if (withFilters !== undefined) {
 			return this.prisma.$queryRaw`
 				WITH ids AS (${withFilters})
@@ -139,23 +143,23 @@ export class ProductService {
 			`;
 	}
 
-	//---------------------------------------------------------------------------
-	async _getNumericOptions(cat_id: number): Promise<INumericOptionEntity[]> {
-		const cachedOptions = await this.cacheService.get<INumericOptionEntity[]>(`${cat_id}::ranges`);
+	// Получает и сохраняет в кэш числовые опции аттрибутов для текущей категории
+	async _getNumericOptions(cat_id: number): Promise<INumericOption[]> {
+		const cachedOptions = await this.cacheService.get<INumericOption[]>(`${cat_id}::ranges`);
 
 		if (cachedOptions) {
 			return cachedOptions;
 		}
 
-		const numericOptions: INumericOptionEntity[] = await this.prisma.$queryRaw`
+		const numericOptions: INumericOption[] = await this.prisma.$queryRaw`
 			select a.id, p.alias, min(p.value), max(p.value) from (
 				select "alias", "value"    
 				FROM "Product" p, jsonb_each_text(p.properties) as attr("alias")
 				where p.cat_id = ${cat_id}
 				GROUP by alias, value
 			) as p
-			join "Attribute" a on p.alias = p.alias
-			and a.alias = p.alias and a."type" in (2,3)
+			join "Attribute" a on a.alias = p.alias
+			and a."type" in (2,3)
 			group by p.alias, a.id
 			union			
 			select 0 as id, 'price' as "alias", min(p.price)::text, max(p.price)::text price 
@@ -167,8 +171,8 @@ export class ProductService {
 		return numericOptions;
 	}
 
-	//---------------------------------------------------------------------------
-	async _withFilters(cat_id: number, filters: { [key: string]: any }): Promise<Prisma.Sql> {
+	// Создает и сохраняет в кэш SQL фильтрации для текущей категории
+	async _withFilters(cat_id: number, filters: IFilters): Promise<Prisma.Sql> {
 		const hashKey = hash(filters);
 		const withIdsCached: Prisma.Sql = await this.cacheService.get<Prisma.Sql>(hashKey);
 
@@ -176,13 +180,15 @@ export class ProductService {
 			return withIdsCached;
 		}
 
-		const withIds = combineFilters(cat_id, filters);
+		const attrMap: IFacets = await this._getAttributes(Number(cat_id));
+		const withIds = combineFilters(cat_id, filters, attrMap);
+
 		await this.cacheService.set(hashKey, withIds, 1000 * 60 * 10);
 		return withIds;
 	}
 
-	//---------------------------------------------------------------------------
-	async _getProducts(cat_id: number, withFilters, offset, limit): Promise<IProductEntity[]> {
+	// Получает товары с применением фильтров для текущей категории
+	async _getProducts(cat_id: number, withFilters, offset, limit): Promise<IProduct[]> {
 		if (withFilters !== undefined) {
 			return await this.prisma.$queryRaw`
 				WITH ids AS (${withFilters})
@@ -200,7 +206,7 @@ export class ProductService {
 			`;
 	}
 
-	//---------------------------------------------------------------------------
+	// Получает количество товаров с применением фильтров для текущей категории
 	async _getProductsCount(cat_id: number, withFilters): Promise<{ count: number }[]> {
 		if (withFilters !== undefined) {
 			return await this.prisma.$queryRaw`select count(id)::int from (${withFilters}) as pp`;
