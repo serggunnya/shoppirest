@@ -1,18 +1,20 @@
 import { Body, Controller, Get, Param, Post, Query, Version } from "@nestjs/common";
 import { ParseIntPipe } from "@nestjs/common/pipes";
-import { ApiBody, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
 
-import { ProductEntityDoc, ProductResponseDoc } from "./Product.Entity";
+import { IFilters, IProductQueryParams } from "./interfaces/product.interface";
 import { ProductService } from "./product.service";
-import { IProductParams } from "./product.types";
+import { FacetSwaggerDoc } from "./swagger/Facet.swagger";
+import { ProductResponseSwaggerDoc, ProductSwaggerDoc } from "./swagger/Product.swagger";
 
-const example = `{
-			"minPrice": 0,
-			"maxPrice": 130599,
-			"ram": ["2gb", "3gb", "4gb", "8gb"],
-			"storage": ["16gb", "128gb"],
-			...
-		}`;
+const example = `
+	{ 
+		"ram": { "val": ["8", "12"]}, 
+		"storage": { "val": ["128", "256"]}, 
+		"price": { "min": 15000, "max": 80000},
+		...
+		}
+	`;
 
 @ApiTags("Products")
 @Controller("products")
@@ -27,14 +29,16 @@ export class ProductController {
 	@ApiQuery({ name: "limit", required: false })
 	@ApiBody({
 		required: false,
-		description: `Product filters example ${example}`,
+		description: `Product filters example 
+			${example}
+		`,
 		schema: { type: `object` },
 	})
-	@ApiOkResponse({ type: ProductResponseDoc })
-	@ApiOperation({ description: "Get list of all or filtered products", operationId: "1" })
+	@ApiOkResponse({ status: 200, type: ProductResponseSwaggerDoc })
+	@ApiOperation({ summary: "Get list of all or filtered products", operationId: "1" })
 	getProductsByCategoryIdV1(
-		@Query() params: IProductParams,
-		@Body() filters: { [key: string]: any },
+		@Query() params: IProductQueryParams,
+		@Body() filters: IFilters,
 	) {
 		return this.productService.getProductsByCategoryIdV1(params, filters);
 	}
@@ -45,14 +49,16 @@ export class ProductController {
 	@ApiQuery({ name: "cat_id", required: true })
 	@ApiBody({
 		required: false,
-		description: `Product facets example ${example}`,
+		description: `Product facets example 
+			${example}
+		`,
 		schema: { type: `object` },
 	})
-	// @ApiOkResponse({ type: FacetsResponseDoc, isArray: true })
-	@ApiOperation({ description: "Get list of all or filtered attributes with available options" })
+	@ApiOkResponse({ status: 200, type: FacetSwaggerDoc })
+	@ApiOperation({ summary: "Get list of all or filtered attributes with available options" })
 	getFacetsByCategoryIdV1(
-		@Query() params: IProductParams,
-		@Body() filters: { [key: string]: any },
+		@Query() params: IProductQueryParams,
+		@Body() filters: IFilters,
 	) {
 		return this.productService.getFacetsByCategoryIdV1(params, filters);
 	}
@@ -60,9 +66,9 @@ export class ProductController {
 	//---------------------------------------------------------------------------
 	@Get(":id")
 	@Version("1")
-	@ApiQuery({ name: "id", required: true })
-	@ApiOkResponse({ type: ProductEntityDoc })
-	@ApiOperation({ description: "Get product by Id" })
+	@ApiParam({ name: "id", required: true })
+	@ApiOkResponse({ status: 200, type: ProductSwaggerDoc })
+	@ApiOperation({ summary: "Get product by Id" })
 	getProductById(@Param("id", ParseIntPipe) id) {
 		return this.productService.getProductById(id);
 	}
