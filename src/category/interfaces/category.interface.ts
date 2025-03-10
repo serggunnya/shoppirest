@@ -1,8 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-import { Attribute, Category } from ".prisma/client";
-
-export class CategoryEntity implements Category {
+export class CategorySwaggerDoc {
 	@ApiProperty()
 	id: number;
 
@@ -13,7 +11,7 @@ export class CategoryEntity implements Category {
 	createdAt: Date;
 }
 
-export class AttributeEntity implements Attribute {
+export class AttributeSwaggerDoc {
 	@ApiProperty()
 	id: number;
 
