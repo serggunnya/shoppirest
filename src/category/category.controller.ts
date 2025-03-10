@@ -1,8 +1,8 @@
-import { Controller, Get } from "@nestjs/common";
-import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { Controller, Get, Version } from "@nestjs/common";
+import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 
 import { CategoryService } from "./category.service";
-import { CategoryEntity } from "./category.types";
+import { CategorySwaggerDoc } from "./swagger/category.swagger";
 
 @ApiTags("Category")
 @Controller("categories")
@@ -10,7 +10,9 @@ export class CategoryController {
 	constructor(private categoryService: CategoryService) {}
 
 	@Get("/")
-	@ApiOkResponse({ type: CategoryEntity, isArray: true })
+	@Version("1")
+	@ApiOkResponse({ status: 200, type: CategorySwaggerDoc, isArray: true })
+	@ApiOperation({ summary: "Get list of all categories", operationId: "1" })
 	allCategories() {
 		return this.categoryService.getAllCategories();
 	}
