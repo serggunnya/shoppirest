@@ -3,98 +3,358 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// npx prisma db push
+
 generator client {
   provider = "prisma-client-js"
   output = "../node_modules/.prisma/client"
 }
 
-model Users {
+// Роли пользователей
+enum Role {
+  CUSTOMER
+  MANAGER
+  ADMIN
+}
+
+enum Language {
+  ru    // Русский
+  en    // Английский
+  de    // Немецкий
+  zh    // Китайский
+}
+
+// Пользователи
+model users {
   id            Int         @id @default(autoincrement())
+  role          Role        @default(CUSTOMER)
   email         String      @unique
   password      String
-  username      String
-  role          String      @default("ROLE_USER")
-  cart          Cart[]
-  reviews       Reviews[]
-  createdAt     DateTime    @default(now())
+  firstname     String?     
+  lastname      String?
+  is_active     Boolean     @default(true)
+  language      Language    @default(ru)    // Предпочитаемый язык
+  currency      String      @default("RUB") // Предпочитаемая валюта
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+
+  addresses     addresses[]
+  cart          carts?
+  orders        orders[]
+  reviews       reviews[]
 }
 
-// npx prisma db push
-model Category {
+// Адреса пользователей
+model addresses {
   id            Int         @id @default(autoincrement())
-  name          String
-  products      Product[]
-  attributes    Category_attribute[]
-  createdAt     DateTime    @default(now())
+  user_id       Int
+  country       String
+  city          String
+  street        String
+  house         String  
+  zipcode       String
+  is_default    Boolean     @default(false)
+  updated_at    DateTime    @updatedAt
+  created_at    DateTime    @default(now())
+
+  user          users       @relation(fields: [user_id], references: [id])
+  orders        orders[]
+
+  @@index([user_id])
 }
 
-model Attribute {
-  id            Int         @id @default(autoincrement())
+// Категории товаров
+model categories {
+  id              Int         @id @default(autoincrement())
+  slug            String      @unique
+  image           String?
+  parent_id       Int?        
+  is_active       Boolean     @default(true)
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt  
+  
+  parent          categories?   @relation("CategoryTree", fields: [parent_id], references: [id])
+  children        categories[]  @relation("CategoryTree")
+  attributes      category_attributes[]
+  translations    category_translations[]
+  products        products[]
+
+  @@index([slug])
+  @@index([parent_id])
+}
+
+model category_translations {
+  id            Int       @id @default(autoincrement()) 
+  category_id   Int
+  locale        String
   name          String
+  description   String?
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+  
+  category      categories   @relation(fields: [category_id], references: [id])
+
+  @@index([category_id])
+}
+
+// Типы атрибутов
+enum AttributeType {  
+  STRING    // для названий
+  TEXT      // для текстовых значений
+  NUMBER    // для числовых значений
+  NUMERIC   // для числов диапазонов
+  BOOLEAN   // для булевых значений
+}
+
+// Атрибуты
+model attributes {
+  id            Int         @id @default(autoincrement())
   alias         String      @unique
-  type          Int  
-  category      Category_attribute[]
-  createdAt     DateTime    @default(now())
-  // suffix        String?
+  type          AttributeType
+  is_filterable Boolean     @default(true)
+  order         Int         @default(0)
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt    
+  translations  attribute_translations[]
+  categories    category_attributes[]
+  units         attribute_units[]
+
+  @@index([alias])
 }
 
-model Category_attribute {
-  id            Int         @id @default(autoincrement())  
+model attribute_translations {
+  id            Int       @id @default(autoincrement()) 
+  attribute_id   Int       
+  locale        String
+  name          String
+  description   String?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  attribute     attributes @relation(fields: [attribute_id], references: [id])
+
+  @@index([attribute_id])
+}
+
+model attribute_units {
+  id            Int       @id @default(autoincrement()) 
+  attribute_id   Int
+  unit_id        Int
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  
+  attributes    attributes @relation(fields: [attribute_id], references: [id])
+  units         units      @relation(fields: [unit_id], references: [id])
+
+  @@unique([attribute_id, unit_id])
+  @@index([attribute_id])
+  @@index([unit_id])
+}
+
+model units {
+  id              Int       @id @default(autoincrement())   
+  locale          String
+  display_text    Json?     @db.JsonB
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  attribute_units  attribute_units[]
+
+  @@index([locale])
+}
+
+// Связь категорий и атрибутов
+model category_attributes {
+  id            Int       @id @default(autoincrement())
   category_id   Int
   attribute_id  Int
-  category      Category    @relation(fields: [category_id], references: [id])
-  attributes    Attribute   @relation(fields: [attribute_id], references: [id])
-  createdAt     DateTime    @default(now())
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt 
+  
+  category      categories  @relation(fields: [category_id], references: [id])
+  attribute     attributes @relation(fields: [attribute_id], references: [id])
+
+  @@unique([category_id, attribute_id])
+  @@index([category_id])
+  @@index([attribute_id])
 }
 
-model Product {
+// Товары
+model products {
   id            Int         @id @default(autoincrement())
-  name          String
-  description   String
-  price         Int
-  available     Boolean     @default(true)
-  discount      Int         @default(0)
-  cat_id        Int
-  category      Category    @relation(fields: [cat_id], references: [id])
+  slug          String      @unique
+  sku           String      @unique
+  price         Decimal     @db.Decimal(10,2)
+  discount      Decimal?    @db.Decimal(10,2)
+  old_price      Decimal?    @db.Decimal(10,2)
+  stock         Int         @default(0)
+  category_id   Int
   properties    Json        @db.JsonB
-  images        Product_images[]
-  items         Cart_items[]
-  reviews       Reviews[]
-  createdAt     DateTime    @default(now())
+  // properties: {
+  //   "brand": {"value": "Apple"},
+  //   "color": {"value": "black"},
+  //   "screen_size": {"value": 6.7}, 
+  //   "ram": {"value": 8},
+  //   "storage": {"value": 64}
+  // }
+  is_active      Boolean     @default(true)
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  
+  category      categories    @relation(fields: [category_id], references: [id])  
+  translations  product_translations[]
+  images        product_images[]
+  reviews       reviews[]
+  cart_items    cart_items[]
+  order_items   order_items[]
+
+  @@index([category_id])
+  @@index([slug])
+  @@index([sku])
+  @@index([price])
+  @@index([properties], type: Gin)
 }
 
-model Product_images {
-  id            Int         @id @default(autoincrement())
-  product       Product     @relation(fields: [product_id], references: [id])
+model product_translations {
+  id              Int       @id @default(autoincrement())
+  product_id      Int
+  locale          String
+  name            String
+  description     String?
+  meta_title      String?
+  meta_description String?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  
+  product         products   @relation(fields: [product_id], references: [id])
+
+  @@index([product_id])
+}
+
+// Изображения товаров
+model product_images {
+  id            Int       @id @default(autoincrement())
   product_id    Int
-  name          String      @default("default.png")
-  createdAt     DateTime    @default(now())
+  url           String
+  order         Int       @default(0)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  
+  product       products  @relation(fields: [product_id], references: [id])
+  
+  @@index([product_id])
 }
 
-
-model Cart {
+// Отзывы о товарах
+model reviews {
   id            Int         @id @default(autoincrement())
-  user_id       Int         
-  users         Users       @relation(fields: [user_id], references: [id])
-  items         Cart_items[]
-  createdAt     DateTime    @default(now())
+  product_id    Int
+  user_id       Int
+  rating        Int         @db.SmallInt  @default(0)
+  text          String?
+  is_moderated  Boolean     @default(false)
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  
+  product       products    @relation(fields: [product_id], references: [id])
+  user          users       @relation(fields: [user_id], references: [id])
+  
+  @@index([product_id])
+  @@index([user_id])
 }
 
-model Cart_items {
-  id            Int         @id @default(autoincrement())
-  cart_id       Int         
-  carts         Cart        @relation(fields: [cart_id], references: [id])
-  prod_id       Int         
-  product       Product     @relation(fields: [prod_id], references: [id])
-  createdAt     DateTime    @default(now())
+// Корзина
+model carts {
+  id            Int       @id @default(autoincrement())
+  user_id       Int       @unique
+  total         Decimal   @db.Decimal(10,2) @default(0)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  
+  user          users     @relation(fields: [user_id], references: [id])
+  items         cart_items[]
 }
 
-model Reviews {
-  id            Int         @id @default(autoincrement())
-  user_id       Int         
-  users         Users       @relation(fields: [user_id], references: [id])
-  prod_id       Int         
-  product       Product     @relation(fields: [prod_id], references: [id])
-  text          String
-  createdAt     DateTime    @default(now())
+// Товары в корзине
+model cart_items {
+  id            Int       @id @default(autoincrement())
+  cart_id       Int
+  product_id    Int
+  quantity      Int
+  price         Decimal   @db.Decimal(10,2)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  
+  cart          carts      @relation(fields: [cart_id], references: [id])
+  product       products   @relation(fields: [product_id], references: [id])
+
+  @@unique([cart_id, product_id])
+  @@index([cart_id])
+  @@index([product_id])
 }
+
+enum OrderStatus {
+  PENDING     // Ожидание оплаты  
+  PROCESSING  // Обработка заказа
+  SHIPPED     // Отправлен
+  DELIVERED   // Доставлен
+  CANCELLED   // Отменен
+  RETURNED    // Возвращен
+}
+
+enum PaymentMethod {
+  CARD              // Оплата картой
+  CASH              // Наличными при получении
+  CRYPTO_BTC        // Bitcoin
+  CRYPTO_ETH        // Ethereum
+  QIWI              // QIWI Кошелек  
+  SBP               // Система быстрых платежей
+}
+
+enum PaymentStatus {
+  PENDING  // Ожидание оплаты
+  PAID     // Оплачено
+  FAILED   // Не оплачено
+  REFUNDED // Возвращено
+}
+
+// Заказы
+model orders {
+  id            Int           @id @default(autoincrement())
+  number        String        @unique    // Номер заказа
+  user_id       Int 
+  status        OrderStatus   @default(PENDING)
+  address_id    Int 
+  total         Decimal       @db.Decimal(10,2)
+  discount      Decimal       @db.Decimal(10,2) @default(0)
+  shipping      Decimal       @db.Decimal(10,2) @default(0)
+  comment       String?
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(PENDING)
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+  
+  user          users         @relation(fields: [user_id], references: [id])
+  address       addresses       @relation(fields: [address_id], references: [id])
+  items         order_items[] 
+
+  @@index([user_id])
+  @@index([number])
+  @@index([status])
+}
+
+// Товары в заказе
+model order_items {
+  id            Int       @id @default(autoincrement())
+  order_id      Int
+  product_id    Int
+  quantity      Int
+  price         Decimal   @db.Decimal(10,2)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  order         orders     @relation(fields: [order_id], references: [id])
+  product       products  @relation(fields: [product_id], references: [id])
+  
+  @@index([order_id])
+  @@index([product_id])
+}
+
