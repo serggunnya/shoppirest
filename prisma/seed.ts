@@ -1,24 +1,23 @@
-// import { PrismaClient, Prisma } from '@prisma/client';
-import { attributes, categories, category_attribute } from "./data/categories";
+import { Prisma, PrismaClient } from "@prisma/client";
+
+import { attributeUnits, attributes, categoryAttributes, units } from "./data/attributes";
+import { categories } from "./data/categories";
 import { products } from "./data/products";
-import { Prisma, PrismaClient } from ".prisma/client";
 
 const prisma = new PrismaClient();
 
-const users: Prisma.UsersCreateInput[] = [
+const users: Prisma.usersCreateInput[] = [
 	{
-		username: "Admin admin",
 		email: "admin@gmail.com",
 		password:
 			"$argon2i$v=19$m=4096,t=3,p=1$ZtyJl0CRjocXKfOVlokgaQ$Xq0kqgBVvGeDBeFUSFrVP/OBY+cEziu3yCnjkCJz8rs",
-		role: "ROLE_ADMIN",
+		role: "CUSTOMER",
 	},
 	{
-		username: "User user",
 		email: "user@gmail.com",
 		password:
 			"$argon2i$v=19$m=4096,t=3,p=1$ZtyJl0CRjocXKfOVlokgaQ$Xq0kqgBVvGeDBeFUSFrVP/OBY+cEziu3yCnjkCJz8rs",
-		role: "ROLE_USER",
+		role: "CUSTOMER",
 	},
 ];
 
@@ -30,22 +29,32 @@ async function main() {
 	}
 
 	for (const cat of categories) {
-		const category = await prisma.category.create({ data: cat });
+		const category = await prisma.categories.create({ data: cat });
 		console.log(`Created category with id: ${category.id}`);
 	}
 
 	for (const attr of attributes) {
-		const attribute = await prisma.attribute.create({ data: attr });
+		const attribute = await prisma.attributes.create({ data: attr });
 		console.log(`Created attribute with id: ${attribute.id}`);
 	}
 
-	for (const ca of category_attribute) {
-		const cat_attr = await prisma.category_attribute.create({ data: ca });
-		console.log(`Created cat_attr with id: ${cat_attr.id}`);
+	for (const ca of categoryAttributes) {
+		const cat_attr = await prisma.category_attributes.create({ data: ca });
+		console.log(`Created category_attribute connection with id: ${cat_attr.id}`);
+	}
+
+	for (const u of units) {
+		const unit = await prisma.units.create({ data: u });
+		console.log(`Created unit with id: ${unit.id}`);
+	}
+
+	for (const au of attributeUnits) {
+		const unit = await prisma.attribute_units.create({ data: au });
+		console.log(`Created attribute_unit connection  with id: ${unit.id}`);
 	}
 
 	for (const p of products) {
-		const product = await prisma.product.create({ data: p });
+		const product = await prisma.products.create({ data: p });
 		console.log(`Created product with id: ${product.id}`);
 	}
 
