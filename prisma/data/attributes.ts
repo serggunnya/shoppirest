@@ -533,17 +533,17 @@ export const units: Prisma.unitsCreateInput[] = [
 	{
 		// id: 1,
 		locale: "ru",
-		display_text: { 1: "МБ", 1000: "ГБ", 1000000: "ТБ" },
+		display_value: { 1: "МБ", 1000: "ГБ", 1000000: "ТБ" },
 	},
 	{
 		// id: 2,
 		locale: "en",
-		display_text: { 1: "MB", 1000: "GB", 1000000: "TB" },
+		display_value: { 1: "MB", 1000: "GB", 1000000: "TB" },
 	},
 	{
 		// id: 3,
 		locale: "ru",
-		display_text: {
+		display_value: {
 			black: "Черный",
 			white: "Белый",
 			red: "Красный",
@@ -560,7 +560,7 @@ export const units: Prisma.unitsCreateInput[] = [
 	{
 		// id: 4,
 		locale: "en",
-		display_text: {
+		display_value: {
 			black: "Black",
 			white: "White",
 			red: "Red",
