@@ -11,7 +11,7 @@ const users: Prisma.usersCreateInput[] = [
 		email: "admin@gmail.com",
 		password:
 			"$argon2i$v=19$m=4096,t=3,p=1$ZtyJl0CRjocXKfOVlokgaQ$Xq0kqgBVvGeDBeFUSFrVP/OBY+cEziu3yCnjkCJz8rs",
-		role: "CUSTOMER",
+		role: "ADMIN",
 	},
 	{
 		email: "user@gmail.com",
