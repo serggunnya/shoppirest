@@ -1,18 +1,7 @@
-import { createParamDecorator } from "@nestjs/common";
 import { Transform } from "class-transformer";
 import { IsEnum, IsInt, IsOptional } from "class-validator";
 
-import { ESorting, ISearchParams } from "./interfaces/product.interface";
-
-export const SearchParamsParse = createParamDecorator((data, req) => {
-	const result = new SearchParamsDTO();
-	result.category = Number(req.query.category);
-	result.page = Number(req.query.page);
-	result.limit = Number(req.query.limit);
-	result.sortBy = req.query.sortBy ? req.query.sortBy : "DEFAULT";
-
-	return result;
-});
+import { EProductSorting, ISearchParams } from "./interfaces/product.interface";
 
 export class SearchParamsDTO implements ISearchParams {
 	@IsInt()
@@ -29,9 +18,9 @@ export class SearchParamsDTO implements ISearchParams {
 	@Transform(({ value }) => parseInt(value))
 	limit?: number = 5;
 
-	@IsEnum(ESorting)
+	@IsEnum(EProductSorting)
 	@IsOptional()
-	sortBy?: ESorting;
+	sortBy?: EProductSorting = EProductSorting.DEFAULT;
 
 	@IsOptional()
 	lang?: string = "ru";

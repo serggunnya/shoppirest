@@ -1,41 +1,67 @@
-import { Attribute, Product } from "@prisma/client";
+import { Prisma, attributes, product_images, products } from "@prisma/client";
 
-export interface NumericValue {
+export interface RangeValue {
 	min?: number;
 	max?: number;
 }
 
-export interface MultiValue {
-	val: (string | boolean)[];
+export interface SelectValue {
+	val: (string | number | boolean)[];
 }
 
-export interface IFilters {
-	[key: string]: NumericValue | MultiValue;
+export interface ISearchFilters {
+	[key: string]: RangeValue | SelectValue;
 }
 
-export interface IProductQueryParams {
-	cat_id: number;
+export enum EProductSorting {
+	DEFAULT = "default",
+	PRICE_ASC = "price_asc",
+	PRICE_DESC = "price_desc",
+	RATING = "rating",
+}
+
+export interface ISearchParams {
+	category: number;
 	page?: number;
 	limit?: number;
+	sortBy?: EProductSorting;
+	lang?: string;
 }
 
-export interface IProductImage {
+export interface IProductImage extends product_images {
 	id: number;
-	product_id: Number;
-	name: string;
-	createdAt: Date;
+	product_id: number;
+	url: string;
+	order: number;
+	created_at: Date;
+	updated_at: Date;
 }
 
-export interface IProduct extends Product {
+export interface IProduct extends products {
 	id: number;
-	cat_id: number;
-	name: string;
-	description: string;
-	price: number;
-	discount: number;
-	available: boolean;
+	slug: string;
+	sku: string;
+	category_id: number;
+	price: Prisma.Decimal;
+	discount: Prisma.Decimal;
+	old_price: Prisma.Decimal;
+	stock: number;
+	name?: string;
+	description?: string;
+	meta_title?: string;
+	meta_description?: string;
+	properties: IProductProp[];
 	images: IProductImage[];
-	createdAt: Date;
+	is_active: boolean;
+	created_at: Date;
+	updated_at: Date;
+}
+
+export interface IProductProp {
+	[key: string]: {
+		value: string | number | boolean;
+		unit_div?: number;
+	};
 }
 
 export interface IProductsWithMeta {
@@ -49,40 +75,49 @@ export interface IProductsWithMeta {
 }
 
 export enum AttributeType {
-	BOOLEAN = 0,
-	TEXT = 1,
-	INTEGER = 2,
-	FLOAT = 3,
+	STRING = "STRING",
+	TEXT = "TEXT",
+	NUMBER = "NUMBER",
+	NUMERIC = "NUMERIC",
+	BOOLEAN = "BOOLEAN",
 }
 
-export interface IAttribute extends Attribute {
+export interface IAttribute extends attributes {
 	id: number;
-	name: string;
 	alias: string;
 	type: AttributeType;
-	createdAt: Date;
+	name?: string;
+	description?: string;
+	display_value?: JSON;
+	is_filterable: boolean;
+	order: number;
+	created_at: Date;
+	updated_at: Date;
 }
 
-export interface ITextOption {
-	id: number;
+export interface ISelectableOption {
 	alias: string;
-	value: string;
-	count: number;
+	data: {
+		value: string;
+		unit_div?: number;
+	};
+	amount: number;
 }
 
-export interface INumericOption {
-	id: number;
+export interface IRangeOption {
 	alias: string;
-	min: number;
-	max: number;
+	data: {
+		value: {
+			min: number;
+			max: number;
+		};
+	};
 }
 
-export interface IAttributeWithOptions extends IAttribute {
-	options: Array<ITextOption | INumericOption>;
+export interface IAttributeWithOption extends IAttribute {
+	options: Array<ISelectableOption | IRangeOption>;
 }
 
 export interface IAttributeMap {
-	[key: string]: IAttributeWithOptions;
+	[key: string]: IAttributeWithOption;
 }
-
-export type IFacets = IAttributeMap;

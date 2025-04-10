@@ -1,23 +1,30 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class AttributeSwaggerDoc {
+export class FacetSwaggerDoc {
 	@ApiProperty()
 	id: number;
 
 	@ApiProperty()
-	name: string;
+	alias: string;
 
 	@ApiProperty()
-	alias: string;
+	type: "TEXT" | "NUMBER" | "NUMERIC" | "BOOLEAN";
+
+	@ApiProperty()
+	name?: string;
+
+	@ApiProperty({ nullable: true })
+	description?: string | null;
+
+	@ApiProperty({ nullable: true })
+	display_value?: JSON | null;
+
+	@ApiProperty()
+	order: number;
 
 	@ApiProperty({ isArray: true })
 	options: { [key: string]: any }[];
 
 	@ApiProperty()
 	createdAt: Date;
-}
-
-export class FacetSwaggerDoc {
-	@ApiProperty()
-	alias: AttributeSwaggerDoc;
 }
