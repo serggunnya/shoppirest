@@ -1,6 +1,7 @@
 import { ValidationPipe, VersioningType } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import * as cookieParser from "cookie-parser";
 
 import { AppModule } from "./app.module";
 
@@ -9,12 +10,13 @@ async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
 
 	app.setGlobalPrefix("/api/");
+	app.use(cookieParser());
 	app.enableVersioning({ type: VersioningType.URI });
 	app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
-	app.enableCors({ origin: "*" });
+	app.enableCors({ origin: "*", credentials: true });
 
 	const config = new DocumentBuilder()
-		.setTitle("Shoppirest")
+		.setTitle("Shoppirest API")
 		.setDescription("The e-commerce API")
 		.setVersion("1.0")
 		.addBearerAuth()
