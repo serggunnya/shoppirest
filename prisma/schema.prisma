@@ -38,10 +38,12 @@ model users {
   created_at    DateTime    @default(now())
   updated_at    DateTime    @updatedAt
 
-  addresses     addresses[]
-  cart          carts?
-  orders        orders[]
-  reviews       reviews[]
+  addresses       addresses[]
+  cart            carts?
+  orders          orders[]
+  reviews         reviews[]
+  refresh_tokens  refresh_tokens[]
+
 }
 
 // Адреса пользователей
@@ -54,13 +56,28 @@ model addresses {
   house         String  
   zipcode       String
   is_default    Boolean     @default(false)
-  updated_at    DateTime    @updatedAt
   created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
 
   user          users       @relation(fields: [user_id], references: [id])
   orders        orders[]
 
   @@index([user_id])
+}
+
+model refresh_tokens {
+  id            Int       @id @default(autoincrement())
+  token         String    @unique
+  user_id       Int
+  expires_at    DateTime
+  revoked       Boolean   @default(false)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  
+  user          users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@index([user_id])
+  @@index([token])
 }
 
 // Категории товаров
@@ -151,11 +168,11 @@ model attribute_units {
 }
 
 model units {
-  id              Int       @id @default(autoincrement())   
-  locale          String
-  display_text    Json?     @db.JsonB
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
+  id               Int       @id @default(autoincrement())   
+  locale           String
+  display_value    Json?     @db.JsonB
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
   attribute_units  attribute_units[]
 
   @@index([locale])
@@ -333,7 +350,7 @@ model orders {
   updated_at    DateTime      @updatedAt
   
   user          users         @relation(fields: [user_id], references: [id])
-  address       addresses       @relation(fields: [address_id], references: [id])
+  address       addresses     @relation(fields: [address_id], references: [id])
   items         order_items[] 
 
   @@index([user_id])
@@ -351,7 +368,7 @@ model order_items {
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
 
-  order         orders     @relation(fields: [order_id], references: [id])
+  order         orders    @relation(fields: [order_id], references: [id])
   product       products  @relation(fields: [product_id], references: [id])
   
   @@index([order_id])
