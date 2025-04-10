@@ -6,7 +6,11 @@ import { PrismaService } from "../prisma/prisma.service";
 export class CategoryService {
 	constructor(private prisma: PrismaService) {}
 
+	/**
+	 * Метод получения категорий
+	 * @returns категории
+	 */
 	async getAllCategories() {
-		return await this.prisma.category.findMany();
+		return await this.prisma.categories.findMany();
 	}
 }
