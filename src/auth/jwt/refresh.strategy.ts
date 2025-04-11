@@ -3,12 +3,14 @@ import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { Request } from "express";
 import { ExtractJwt, Strategy } from "passport-jwt";
-
-import { PrismaService } from "../../prisma/prisma.service";
+import { PrismaService } from "prisma/prisma.service";
 
 @Injectable()
 export class RefreshJwtStrategy extends PassportStrategy(Strategy, "jwt-refresh") {
-	constructor(configService: ConfigService, private prisma: PrismaService) {
+	constructor(
+		configService: ConfigService,
+		private prisma: PrismaService,
+	) {
 		super({
 			jwtFromRequest: ExtractJwt.fromExtractors([
 				(request: Request) => {

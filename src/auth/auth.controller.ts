@@ -1,12 +1,11 @@
 import { Body, Controller, Get, Post, Req, Res, UseGuards, Version } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { AuthService } from "auth/auth.service";
+import { LoginDto } from "auth/dto/login.dto";
+import { RegisterDto } from "auth/dto/register.dto";
+import { AuthResponseSwaggerDoc } from "auth/swagger/authResponseSwaggerDoc";
 import { Response } from "express";
-
-import { AuthService } from "./auth.service";
-import { LoginDto } from "./dto/login.dto";
-import { RegisterDto } from "./dto/register.dto";
-import { AuthResponseSwaggerDoc } from "./swagger/AuthResponseSwaggerDoc";
 
 @ApiTags("Auth")
 @Controller("auth")
@@ -41,7 +40,7 @@ export class AuthController {
 	@Version("1")
 	@ApiBearerAuth()
 	@UseGuards(AuthGuard("jwt-refresh"))
-	@ApiOperation({ summary: "Refresh access token" })
+	@ApiOperation({ summary: "Refresh all tokens" })
 	@ApiResponse({
 		status: 200,
 		description: "Token refreshed successfully",

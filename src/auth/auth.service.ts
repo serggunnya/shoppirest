@@ -2,11 +2,11 @@ import { ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/c
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import * as argon from "argon2";
+import { IJwtTokens, IToken, IUserCredentials, IUserDto } from "auth/interfaces/auth.interface";
 import { Response } from "express";
 
-import { PrismaService } from "../prisma/prisma.service";
-import { IJwtTokens, IToken, IUserCredentials, IUserDto } from "./interfaces/auth.interface";
 import { PrismaClientKnownRequestError } from ".prisma/client/runtime/library";
+import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class AuthService {
