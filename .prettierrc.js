@@ -1,0 +1,18 @@
+module.exports = {
+	semi: true,
+	trailingComma: "all",
+	singleQuote: false,
+	printWidth: 100,
+	tabWidth: 2,
+	useTabs: true,
+	endOfLine: "lf",
+	bracketSpacing: true,
+	bracketSameLine: false,
+	arrowParens: "always",
+	quoteProps: "as-needed",
+	embeddedLanguageFormatting: "auto",
+	importOrderParserPlugins: ["typescript", "jsx", "decorators-legacy"],
+	importOrder: ["^@nestjs/(.*)$", "<THIRD_PARTY_MODULES>", "^@(.*)$", "^[./]"],
+	importOrderSeparation: true,
+	importOrderSortSpecifiers: true,
+};
