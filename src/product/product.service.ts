@@ -21,7 +21,10 @@ var hash = require("object-hash");
 
 @Injectable()
 export class ProductService {
-	constructor(private prisma: PrismaService, @Inject(CACHE_MANAGER) private cacheService: Cache) {}
+	constructor(
+		private prisma: PrismaService,
+		@Inject(CACHE_MANAGER) private cacheService: Cache,
+	) {}
 
 	/**
 	 * Поиск товаров с применением фильтров
@@ -75,7 +78,7 @@ export class ProductService {
 					type: attributes[k].type,
 					name: attributes[k]?.name,
 					description: attributes[k]?.description,
-					display_text: attributes[k]?.display_value,
+					display_value: attributes[k]?.display_value,
 					order: attributes[k].order,
 				};
 				details.push(prop);
@@ -239,7 +242,7 @@ export class ProductService {
 		const attributes: IAttribute[] = await this.prisma.$queryRaw`
 			SELECT distinct on (a.id) 
 				a.id, a.alias, a.type, at.name,
-				at.description, u.display_text, a.order
+				at.description, u.display_value, a.order
 				FROM attributes a
 				JOIN category_attributes ca ON ca.attribute_id = a.id
 				LEFT JOIN attribute_translations at ON at.attribute_id = a.id 
@@ -250,7 +253,7 @@ export class ProductService {
 				WHERE ca.category_id = ${categoryId} 
 				${!all ? Prisma.sql`AND a.is_filterable = true` : Prisma.empty}
 				group by a.id, at.name, 
-					at.description, u.display_text
+					at.description, u.display_value
 			`;
 
 		const attributesMap: IAttributeMap = {};
