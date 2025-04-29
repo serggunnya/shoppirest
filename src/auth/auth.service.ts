@@ -2,17 +2,25 @@ import { ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/c
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import * as argon from "argon2";
-import { IJwtTokens, IToken, IUserCredentials, IUserDto } from "auth/interfaces/auth.interface";
 import { Response } from "express";
 
 import { PrismaClientKnownRequestError } from ".prisma/client/runtime/library";
+import {
+	IJwtTokens,
+	IToken,
+	IUser,
+	IUserCredentials,
+	IUserDto,
+} from "auth/interfaces/auth.interface";
+import { CartService } from "cart/cart.service";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class AuthService {
 	constructor(
-		private prisma: PrismaService,
 		private jwt: JwtService,
+		private prisma: PrismaService,
+		private cartService: CartService,
 		private configService: ConfigService,
 	) {}
 
@@ -23,13 +31,32 @@ export class AuthService {
 	 * @returns access токен
 	 */
 	async register(userData: IUserDto, res: Response): Promise<IToken> {
-		const hash = await argon.hash(userData.password);
+		// проверяем наличие пользователя с таким email
+		const userExists = await this.prisma.users.findUnique({
+			where: { email: userData.email },
+		});
+
+		if (userExists) {
+			throw new ForbiddenException("Credentials taken");
+		}
 
 		try {
+			// хэшируем пароль
+			const hashedPassword = await argon.hash(userData.password);
+
 			// создаём нового пользователя
 			const user = await this.prisma.users.create({
-				data: { email: userData.email, password: hash, role: "CUSTOMER" },
+				data: {
+					firstname: userData.firstname,
+					lastname: userData.lastname,
+					email: userData.email,
+					password: hashedPassword,
+					role: "CUSTOMER",
+				},
 			});
+
+			// создаём корзину пользователя
+			await this.prisma.carts.create({ data: { user_id: user.id } });
 
 			// генерируем новые токены
 			const { access_token, refresh_token } = await this._generateTokens(user);
@@ -74,6 +101,35 @@ export class AuthService {
 		this._setRefreshTokenCookie(res, refresh_token);
 
 		return { access_token };
+	}
+
+	/**
+	 * Метод получения данных авторизованого пользователя
+	 * @param userId id пользователя из access токена
+	 * @returns Объект пользователя
+	 */
+	async getUser(userId: number) {
+		const user = (await this.prisma.users.findUnique({
+			where: { id: userId },
+			select: {
+				id: true,
+				firstname: true,
+				lastname: true,
+				email: true,
+				role: true,
+				language: true,
+				currency: true,
+				addresses: true,
+			},
+		})) as IUser;
+
+		if (!user) {
+			throw new ForbiddenException("User not found");
+		}
+
+		const cart = await this.cartService.getCartItems(user.id, user.language);
+
+		return { user, cart };
 	}
 
 	/**
@@ -155,35 +211,6 @@ export class AuthService {
 		// Очищение cookies
 		res.clearCookie("refresh_token");
 		return { success: true };
-	}
-
-	/**
-	 * Метод получения данных авторизованого пользователя
-	 * @param userId id пользователя из access токена
-	 * @returns Объект пользователя
-	 */
-	async getUser(userId: number) {
-		const user = await this.prisma.users.findUnique({
-			where: { id: userId },
-			select: {
-				id: true,
-				firstname: true,
-				lastname: true,
-				email: true,
-				role: true,
-				language: true,
-				currency: true,
-				addresses: true,
-				cart: true,
-				orders: true,
-			},
-		});
-
-		if (!user) {
-			throw new ForbiddenException("User not found");
-		}
-
-		return user;
 	}
 
 	/**
