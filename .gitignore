@@ -2,6 +2,8 @@
 .env
 /server
 /node_modules
+/react
+/next
 /react/build
 /react/node_modules
 /vue/node_modules
