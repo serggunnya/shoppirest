@@ -8,7 +8,7 @@ interface JwtAccessPayload {
 }
 
 interface JwtRefreshPayload extends JwtAccessPayload {
-	refreshToken: string;
+	tokenId: number;
 }
 
 export type RequestWithUser = Request & { user: JwtAccessPayload };

@@ -51,8 +51,8 @@ export class AuthController {
 	@ApiResponse({ status: 401, description: "Unauthorized" })
 	refresh(@Req() req: RequestWithToken, @Res({ passthrough: true }) res: Response) {
 		const userId = req.user.userId;
-		const refreshToken = req.user.refreshToken;
-		return this.authService.refreshTokens(userId, refreshToken, res);
+		const tokenId = req.user.tokenId;
+		return this.authService.refreshTokens(userId, tokenId, res);
 	}
 
 	@Post("logout")
@@ -64,8 +64,8 @@ export class AuthController {
 	@ApiResponse({ status: 401, description: "Unauthorized" })
 	logout(@Req() req: RequestWithToken, @Res({ passthrough: true }) res: Response) {
 		const userId = req.user.userId;
-		const refreshToken = req.user.refreshToken;
-		return this.authService.logout(userId, refreshToken, res);
+		const tokenId = req.user.tokenId;
+		return this.authService.logout(userId, tokenId, res);
 	}
 
 	@Post("logout-all")

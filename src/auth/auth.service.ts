@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ForbiddenException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import * as argon from "argon2";
@@ -60,8 +60,9 @@ export class AuthService {
 
 			// генерируем новые токены
 			const { access_token, refresh_token } = await this._generateTokens(user);
+			this._setTokenCookie(res, "ACCESS_TOKEN", access_token, 60 * 60 * 1000);
+			this._setTokenCookie(res, "REFRESH_TOKEN", refresh_token, 7 * 24 * 60 * 60 * 1000);
 			await this._saveRefreshToken(user.id, refresh_token);
-			this._setRefreshTokenCookie(res, refresh_token);
 
 			return { access_token };
 		} catch (error) {
@@ -97,8 +98,9 @@ export class AuthService {
 
 		// генерируем новые токены
 		const { access_token, refresh_token } = await this._generateTokens(user);
+		this._setTokenCookie(res, "ACCESS_TOKEN", access_token, 60 * 60 * 1000);
+		this._setTokenCookie(res, "REFRESH_TOKEN", refresh_token, 7 * 24 * 60 * 60 * 1000);
 		await this._saveRefreshToken(user.id, refresh_token);
-		this._setRefreshTokenCookie(res, refresh_token);
 
 		return { access_token };
 	}
@@ -139,21 +141,21 @@ export class AuthService {
 	 * @param res Объект ответа для записи токена в cookies
 	 * @returns access токен
 	 */
-	async refreshTokens(userId: number, refreshToken: string, res: Response): Promise<IToken> {
+	async refreshTokens(userId: number, tokenId: number, res: Response): Promise<IToken> {
 		// Находим токен в базе
-		const tokenRecord = await this.prisma.refresh_tokens.findFirst({
-			where: {
-				token: refreshToken,
-				user_id: userId,
-				revoked: false,
-				expires_at: { gt: new Date() },
-			},
-		});
+		// const tokenRecord = await this.prisma.refresh_tokens.findFirst({
+		// 	where: {
+		// 		token: refreshToken,
+		// 		user_id: userId,
+		// 		revoked: false,
+		// 		expires_at: { gt: new Date() },
+		// 	},
+		// });
 
-		// существует ли токен и не отозван ли он
-		if (!tokenRecord) {
-			throw new UnauthorizedException("Invalid or revoked refresh token");
-		}
+		// // существует ли токен и не отозван ли он
+		// if (!tokenRecord) {
+		// 	throw new UnauthorizedException("Invalid or revoked refresh token");
+		// }
 
 		// находим пользователя
 		const user = await this.prisma.users.findUnique({ where: { id: userId } });
@@ -164,14 +166,16 @@ export class AuthService {
 
 		// Отзываем старый токен
 		await this.prisma.refresh_tokens.update({
-			where: { id: tokenRecord.id },
+			where: { id: tokenId },
 			data: { revoked: true },
 		});
 
 		// генерируем новые токены
 		const { access_token, refresh_token } = await this._generateTokens(user);
+
+		this._setTokenCookie(res, "ACCESS_TOKEN", access_token, 60 * 60 * 1000);
+		this._setTokenCookie(res, "REFRESH_TOKEN", refresh_token, 7 * 24 * 60 * 60 * 1000);
 		await this._saveRefreshToken(user.id, refresh_token);
-		this._setRefreshTokenCookie(res, refresh_token);
 
 		return { access_token };
 	}
@@ -183,15 +187,16 @@ export class AuthService {
 	 * @param res Объект ответа для очищения cookies
 	 * @returns true
 	 */
-	async logout(userId: number, refreshToken: string, res: Response): Promise<{ success: boolean }> {
+	async logout(userId: number, tokenId: number, res: Response): Promise<{ success: boolean }> {
 		// отзываем текущий токен
 		await this.prisma.refresh_tokens.updateMany({
-			where: { user_id: userId, token: refreshToken, revoked: false },
+			where: { user_id: userId, id: tokenId, revoked: false },
 			data: { revoked: true },
 		});
 
 		// очищаем cookies
-		res.clearCookie("refresh_token");
+		this._deleteTokenCookie(res, "ACCESS_TOKEN");
+		this._deleteTokenCookie(res, "REFRESH_TOKEN");
 		return { success: true };
 	}
 
@@ -209,7 +214,8 @@ export class AuthService {
 		});
 
 		// Очищение cookies
-		res.clearCookie("refresh_token");
+		this._deleteTokenCookie(res, "ACCESS_TOKEN");
+		this._deleteTokenCookie(res, "REFRESH_TOKEN");
 		return { success: true };
 	}
 
@@ -254,18 +260,26 @@ export class AuthService {
 	}
 
 	/**
-	 * Приватный метод для сохранения refresh токена в cookies
+	 * Приватный метод для сохранения токена в cookies
 	 * @param res Объект ответа
 	 * @param token токен
 	 * @returns void
 	 */
-	private _setRefreshTokenCookie(res: Response, token: string) {
-		res?.cookie("refresh_token", token, {
-			httpOnly: false,
-			secure: false, //process.env.NODE_ENV !== "development", // true в production
+	private _setTokenCookie(res: Response, name: string, token: string, age: number) {
+		res?.cookie(name, token, {
+			httpOnly: true,
+			secure: process.env.NODE_ENV !== "development", // true в production
 			sameSite: "strict",
-			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
-			path: "/api/auth",
+			maxAge: age,
+			path: "/api/",
+		});
+	}
+
+	private _deleteTokenCookie(res: Response, name: string) {
+		res?.clearCookie(name, {
+			httpOnly: true,
+			sameSite: "strict",
+			path: "/api/",
 		});
 	}
 }

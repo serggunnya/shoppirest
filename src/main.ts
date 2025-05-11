@@ -19,7 +19,7 @@ async function bootstrap() {
 		.setTitle("Shoppirest API")
 		.setDescription("The e-commerce API")
 		.setVersion("1.0")
-		.addBearerAuth()
+		.addCookieAuth("ACCESS_TOKEN")
 		.build();
 
 	const document = SwaggerModule.createDocument(app, config);
