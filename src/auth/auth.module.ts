@@ -6,7 +6,6 @@ import { AuthController } from "auth/auth.controller";
 import { AuthService } from "auth/auth.service";
 import { AccessJwtStrategy } from "auth/jwt/access.strategy";
 import { RefreshJwtStrategy } from "auth/jwt/refresh.strategy";
-import { CartModule } from "cart/cart.module";
 
 @Module({
 	imports: [
@@ -15,7 +14,6 @@ import { CartModule } from "cart/cart.module";
 			inject: [ConfigService],
 			useFactory: async (configService: ConfigService) => ({}),
 		}),
-		CartModule,
 	],
 	controllers: [AuthController],
 	providers: [AuthService, AccessJwtStrategy, RefreshJwtStrategy],

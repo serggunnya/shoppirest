@@ -12,7 +12,6 @@ import {
 	IUserCredentials,
 	IUserDto,
 } from "auth/interfaces/auth.interface";
-import { CartService } from "cart/cart.service";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
@@ -20,7 +19,6 @@ export class AuthService {
 	constructor(
 		private jwt: JwtService,
 		private prisma: PrismaService,
-		private cartService: CartService,
 		private configService: ConfigService,
 	) {}
 
@@ -54,9 +52,6 @@ export class AuthService {
 					role: "CUSTOMER",
 				},
 			});
-
-			// создаём корзину пользователя
-			await this.prisma.carts.create({ data: { user_id: user.id } });
 
 			// генерируем новые токены
 			const { access_token, refresh_token } = await this._generateTokens(user);
@@ -129,9 +124,7 @@ export class AuthService {
 			throw new ForbiddenException("User not found");
 		}
 
-		const cart = await this.cartService.getCartItems(user.id, user.language);
-
-		return { user, cart };
+		return { user };
 	}
 
 	/**
