@@ -12,7 +12,6 @@ import {
 	IUserCredentials,
 	IUserDto,
 } from "auth/interfaces/auth.interface";
-
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
