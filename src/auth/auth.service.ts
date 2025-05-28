@@ -12,6 +12,7 @@ import {
 	IUserCredentials,
 	IUserDto,
 } from "auth/interfaces/auth.interface";
+
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
@@ -52,6 +53,9 @@ export class AuthService {
 					role: "CUSTOMER",
 				},
 			});
+
+			// создаём корзину пользователя
+			await this.prisma.carts.create({ data: { user_id: user.id } });
 
 			// генерируем новые токены
 			const { access_token, refresh_token } = await this._generateTokens(user);
@@ -262,7 +266,7 @@ export class AuthService {
 		res?.cookie(name, token, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV !== "development", // true в production
-			sameSite: "strict",
+			sameSite: "none",
 			maxAge: age,
 			path: "/api/",
 		});
@@ -271,7 +275,7 @@ export class AuthService {
 	private _deleteTokenCookie(res: Response, name: string) {
 		res?.clearCookie(name, {
 			httpOnly: true,
-			sameSite: "strict",
+			sameSite: "none",
 			path: "/api/",
 		});
 	}
