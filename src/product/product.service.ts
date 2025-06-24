@@ -2,6 +2,7 @@ import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import { Inject, Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { Cache } from "cache-manager";
+
 import combineFilters from "utils/combineFilters";
 
 import { PrismaService } from "../prisma/prisma.service";
@@ -17,7 +18,7 @@ import {
 	ISelectableOption,
 } from "./interfaces/product.interface";
 
-var hash = require("object-hash");
+const hash = require("object-hash");
 
 @Injectable()
 export class ProductService {
@@ -70,7 +71,7 @@ export class ProductService {
 		const keys = Object.keys(attributes);
 
 		const details = [];
-		for (let k of keys) {
+		for (const k of keys) {
 			if (k !== "price") {
 				const prop = {
 					...product[0].details[k],
@@ -108,7 +109,7 @@ export class ProductService {
 			...(await this._getRangeOptions(categoryId)),
 		];
 
-		for (let o of options) {
+		for (const o of options) {
 			facets[o.alias].options.push(o);
 		}
 
@@ -233,10 +234,10 @@ export class ProductService {
 	): Promise<IAttributeMap> {
 		const isFilterable = all ? "all" : "some";
 		const hashKey = `${categoryId}::${locale}::${isFilterable}::attributes`;
-		const cachedAttributes = await this.cacheService.get<IAttributeMap>(hashKey);
+		const cachedAttributes = await this.cacheService.get<string>(hashKey);
 
 		if (cachedAttributes) {
-			return cachedAttributes;
+			return JSON.parse(cachedAttributes) as IAttributeMap;
 		}
 
 		const attributes: IAttribute[] = await this.prisma.$queryRaw`
@@ -257,12 +258,12 @@ export class ProductService {
 			`;
 
 		const attributesMap: IAttributeMap = {};
-		for (let attr of attributes) {
+		for (const attr of attributes) {
 			const attrWithOptions: IAttributeWithOption = { ...attr, options: [] };
 			attributesMap[attr.alias] = attrWithOptions;
 		}
 
-		await this.cacheService.set(hashKey, attributesMap, 1000 * 60 * 10);
+		await this.cacheService.set(hashKey, JSON.stringify(attributesMap), 1000 * 60 * 10);
 
 		return attributesMap;
 	}
@@ -290,9 +291,7 @@ export class ProductService {
 						AND a.is_filterable = true 						
 						AND p.properties ? a.alias
 				)
-				SELECT so.alias, so.data, COUNT(${
-					withQueryFilters ? Prisma.sql`qf.id` : Prisma.sql`*`
-				})::int as "amount"
+				SELECT so.alias, so.data, COUNT(${withQueryFilters ? Prisma.sql`qf.id` : Prisma.sql`*`})::int as "amount"
 				FROM selectable_options so
 				${withQueryFilters ? Prisma.sql`LEFT JOIN query_filters qf ON qf.id = so.id` : Prisma.empty}
 				WHERE so.data IS NOT NULL
@@ -315,8 +314,7 @@ export class ProductService {
 
 		const numericOptions: IRangeOption[] = await this.prisma.$queryRaw`
 			WITH numeric_options AS (
-				SELECT a.alias,
-					(p.properties->a.alias->>'value')::numeric as value
+				SELECT a.alias,(p.properties->a.alias->>'value')::numeric as value
 				FROM products p
 				CROSS JOIN "attributes" a
 				WHERE p.category_id = ${categoryId}
@@ -330,8 +328,7 @@ export class ProductService {
 				FROM products WHERE category_id = ${categoryId}
 					AND is_active = true AND price > 0
 			)
-			SELECT alias, 
-			jsonb_build_object('value', 
+			SELECT alias, jsonb_build_object('value', 
 				jsonb_build_object('min',MIN(value),'max', MAX(value)) 
 			) as data
 			FROM (

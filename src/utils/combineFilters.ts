@@ -9,10 +9,10 @@ import {
 } from "../product/interfaces/product.interface";
 
 /**
- * Создание запроса фильтрации 
+ * Создание запроса фильтрации
  * @param {number} categoryId - id категории
  * @param {ISearchFilters} searchFilters - фильтры
- * @param {IAttributeMap} attributeMap - атрибуты 
+ * @param {IAttributeMap} attributeMap - атрибуты
  * @returns {Prisma.Sql} - запрос фильтрации
  */
 const combineFilters = (

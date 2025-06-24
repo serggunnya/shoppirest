@@ -13,7 +13,7 @@ async function bootstrap() {
 	app.use(cookieParser());
 	app.enableVersioning({ type: VersioningType.URI });
 	app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
-	app.enableCors({ origin: process.env.ORIGIN, credentials: true });
+	app.enableCors({ origin: process.env.ORIGIN, methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', credentials: true });
 
 	const config = new DocumentBuilder()
 		.setTitle("Shoppirest API")
