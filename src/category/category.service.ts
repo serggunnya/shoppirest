@@ -8,9 +8,16 @@ export class CategoryService {
 
 	/**
 	 * Метод получения категорий
+	 * @param locale язык перевода
 	 * @returns категории
 	 */
-	async getAllCategories() {
-		return await this.prisma.categories.findMany();
+	async getAllCategories(locale: string) {
+		return await this.prisma.$queryRaw`
+			select 
+				c.id, c.slug, ct."name", ct.description, 
+				c.image, c.parent_id from categories c 
+			join category_translations ct on ct.category_id = c.id
+			where ct.locale = ${locale}
+		`;
 	}
 }
