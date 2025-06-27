@@ -107,10 +107,8 @@ export interface ISelectableOption {
 export interface IRangeOption {
 	alias: string;
 	data: {
-		value: {
-			min: number;
-			max: number;
-		};
+		min: number;
+		max: number;
 	};
 }
 

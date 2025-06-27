@@ -328,9 +328,9 @@ export class ProductService {
 				FROM products WHERE category_id = ${categoryId}
 					AND is_active = true AND price > 0
 			)
-			SELECT alias, jsonb_build_object('value', 
-				jsonb_build_object('min',MIN(value),'max', MAX(value)) 
-			) as data
+			SELECT 
+				alias, 
+				jsonb_build_object('min',MIN(value),'max', MAX(value)) as data
 			FROM (
 				SELECT * FROM numeric_options
 				UNION ALL
