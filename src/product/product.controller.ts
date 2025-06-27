@@ -2,9 +2,9 @@ import { Body, Controller, Get, Param, Post, Query, Version } from "@nestjs/comm
 import { ParseIntPipe } from "@nestjs/common/pipes";
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 
-import { SearchParamsDTO } from "./SearchParamsDTO";
 import { ISearchFilters } from "./interfaces/product.interface";
 import { ProductService } from "./product.service";
+import { SearchParamsDTO } from "./SearchParamsDTO";
 import { FacetSwaggerDoc } from "./swagger/Facet.swagger";
 import { ProductResponseSwaggerDoc, ProductSwaggerDoc } from "./swagger/Product.swagger";
 
@@ -27,11 +27,11 @@ export class ProductController {
 	//---------------------------------------------------------------------------
 	@Post("/search")
 	@Version("1")
-	@ApiQuery({ name: "category", required: true })
-	@ApiQuery({ name: "page", required: true })
-	@ApiQuery({ name: "limit", required: false })
-	@ApiQuery({ name: "sortBy", required: false })
-	@ApiQuery({ name: "lang", required: false })
+	@ApiQuery({ name: "category", required: true, default: 1 })
+	@ApiQuery({ name: "page", required: true, default: 1 })
+	@ApiQuery({ name: "limit", required: false, default: 5 })
+	@ApiQuery({ name: "sortBy", required: false, default: "default" })
+	@ApiQuery({ name: "lang", required: false, default: "ru" })
 	@ApiBody({
 		required: false,
 		schema: { type: `object` },
@@ -48,8 +48,8 @@ export class ProductController {
 	//---------------------------------------------------------------------------
 	@Post("/facets")
 	@Version("1")
-	@ApiQuery({ name: "category", required: true })
-	@ApiQuery({ name: "lang", required: false })
+	@ApiQuery({ name: "category", required: true, default: 1 })
+	@ApiQuery({ name: "lang", required: false, default: "ru" })
 	@ApiBody({
 		required: false,
 		description: `Product facets example 
@@ -71,10 +71,10 @@ export class ProductController {
 	@Get(":id")
 	@Version("1")
 	@ApiParam({ name: "id", required: true })
-	@ApiQuery({ name: "lang", required: false })
+	@ApiQuery({ name: "lang", required: false, default: "ru" })
 	@ApiResponse({ status: 200, type: ProductSwaggerDoc })
 	@ApiOperation({ summary: "Get product by Id" })
-	getProductById(@Param("id", ParseIntPipe) id, @Query("lang") locale: string = "ru") {
+	getProductById(@Param("id", ParseIntPipe) id: number, @Query("lang") locale: string = "ru") {
 		return this.productService.getProductDetails(id, locale);
 	}
 }
