@@ -3,9 +3,9 @@ import { Prisma } from "@prisma/client";
 import {
 	AttributeType,
 	IAttributeMap,
-	ISearchFilters,
-	RangeValue,
-	SelectValue,
+	IFiltersBodyDto,
+	RangeValueBodyDto,
+	SelectValueBodyDto,
 } from "../product/interfaces/product.interface";
 
 /**
@@ -17,7 +17,7 @@ import {
  */
 const combineFilters = (
 	categoryId: number,
-	searchFilters: ISearchFilters,
+	searchFilters: IFiltersBodyDto,
 	attributeMap: IAttributeMap,
 ): Prisma.Sql => {
 	try {
@@ -29,10 +29,10 @@ const combineFilters = (
 			const data = searchFilters[alias];
 
 			if (type === AttributeType.NUMERIC) {
-				const condition = createRangeCondition(alias, data as RangeValue);
+				const condition = createRangeCondition(alias, data as RangeValueBodyDto);
 				conditions.push(condition);
 			} else {
-				const condition = createSelectCondition(alias, data as SelectValue, type);
+				const condition = createSelectCondition(alias, data as SelectValueBodyDto, type);
 				conditions.push(condition);
 			}
 		}
@@ -51,7 +51,7 @@ const combineFilters = (
 
 const createSelectCondition = (
 	alias: string,
-	data: SelectValue,
+	data: SelectValueBodyDto,
 	type: AttributeType,
 ): Prisma.Sql => {
 	let castType = Prisma.empty;
@@ -68,11 +68,11 @@ const createSelectCondition = (
 	 AND (p.properties -> ${alias} ->>'value')::${castType} IN (${Prisma.join(data.val)})`;
 };
 
-const createRangeCondition = (alias: string, data: RangeValue): Prisma.Sql => {
+const createRangeCondition = (alias: string, data: RangeValueBodyDto): Prisma.Sql => {
 	if (alias === "price") {
 		return Prisma.sql`
-			${data?.min ? Prisma.sql` AND p.price >= ${data.min}` : Prisma.empty}
-			${data?.max ? Prisma.sql` AND p.price <= ${data.max}` : Prisma.empty}
+			${data?.min ? Prisma.sql` AND p.price >= ${data?.min}` : Prisma.empty}
+			${data?.max ? Prisma.sql` AND p.price <= ${data?.max}` : Prisma.empty}
 		`;
 	}
 

@@ -2,9 +2,10 @@ import { Body, Controller, Get, Param, Post, Query, Version } from "@nestjs/comm
 import { ParseIntPipe } from "@nestjs/common/pipes";
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 
-import { ISearchFilters } from "./interfaces/product.interface";
+import { BaseSearchParamsDto } from "./dto/BaseSearchParamsDto";
+import { ProductSearchParamsDto } from "./dto/ProductSearchParamsDto";
+import { IFiltersBodyDto } from "./interfaces/product.interface";
 import { ProductService } from "./product.service";
-import { SearchParamsDTO } from "./SearchParamsDTO";
 import { FacetSwaggerDoc } from "./swagger/Facet.swagger";
 import { ProductResponseSwaggerDoc, ProductSwaggerDoc } from "./swagger/Product.swagger";
 
@@ -41,8 +42,11 @@ export class ProductController {
 	})
 	@ApiResponse({ status: 200, type: ProductResponseSwaggerDoc })
 	@ApiOperation({ summary: "Get list of products", operationId: "1" })
-	searchProducts(@Query() params: SearchParamsDTO, @Body() filters: ISearchFilters) {
-		return this.productService.searchProducts(params, filters);
+	searchProducts(
+		@Query() searchParams: ProductSearchParamsDto,
+		@Body() filtersBody: IFiltersBodyDto,
+	) {
+		return this.productService.searchProducts(searchParams, filtersBody);
 	}
 
 	//---------------------------------------------------------------------------
@@ -60,11 +64,10 @@ export class ProductController {
 	@ApiResponse({ status: 200, type: FacetSwaggerDoc, isArray: true })
 	@ApiOperation({ summary: "Get list of all or filtered attributes with available options" })
 	getFacetsByCategoryIdV1(
-		@Query("category", ParseIntPipe) category: number,
-		@Query("lang") locale: string = "ru",
-		@Body() filters: ISearchFilters,
+		@Query() searchParams: BaseSearchParamsDto,
+		@Body() filtersBody: IFiltersBodyDto,
 	) {
-		return this.productService.getFacets(category, filters, locale);
+		return this.productService.getFacets(searchParams, filtersBody);
 	}
 
 	//---------------------------------------------------------------------------

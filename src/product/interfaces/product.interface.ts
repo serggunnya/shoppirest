@@ -1,31 +1,34 @@
 import { Prisma, attributes, product_images, products } from "@prisma/client";
 
-export interface RangeValue {
+export interface RangeValueBodyDto {
 	min?: number;
 	max?: number;
 }
 
-export interface SelectValue {
-	val: (string | number | boolean)[];
+export interface SelectValueBodyDto {
+	val: Array<string | number | boolean>;
 }
 
-export interface ISearchFilters {
-	[key: string]: RangeValue | SelectValue;
+export interface IFiltersBodyDto {
+	[key: string]: RangeValueBodyDto | SelectValueBodyDto;
 }
 
-export enum EProductSorting {
+export enum ProductSortingEnum {
 	DEFAULT = "default",
 	PRICE_ASC = "price_asc",
 	PRICE_DESC = "price_desc",
 	RATING = "rating",
 }
 
-export interface ISearchParams {
+export interface IBaseSearchParamsDto {
 	category: number;
+	lang?: string;
+}
+
+export interface IProductSearchParamsDto extends IBaseSearchParamsDto {
 	page?: number;
 	limit?: number;
-	sortBy?: EProductSorting;
-	lang?: string;
+	sortBy?: ProductSortingEnum;
 }
 
 export interface IProductImage extends product_images {

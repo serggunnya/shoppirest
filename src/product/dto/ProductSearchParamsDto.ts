@@ -1,9 +1,9 @@
 import { Transform } from "class-transformer";
 import { IsEnum, IsInt, IsOptional } from "class-validator";
 
-import { EProductSorting, ISearchParams } from "./interfaces/product.interface";
+import { IProductSearchParamsDto, ProductSortingEnum } from "../interfaces/product.interface";
 
-export class SearchParamsDTO implements ISearchParams {
+export class ProductSearchParamsDto implements IProductSearchParamsDto {
 	@IsInt()
 	@Transform(({ value }) => parseInt(value))
 	category: number;
@@ -18,9 +18,9 @@ export class SearchParamsDTO implements ISearchParams {
 	@Transform(({ value }) => parseInt(value))
 	limit?: number = 5;
 
-	@IsEnum(EProductSorting)
+	@IsEnum(ProductSortingEnum)
 	@IsOptional()
-	sortBy?: EProductSorting = EProductSorting.DEFAULT;
+	sortBy?: ProductSortingEnum = ProductSortingEnum.DEFAULT;
 
 	@IsOptional()
 	lang?: string = "ru";

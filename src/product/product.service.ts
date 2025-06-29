@@ -2,6 +2,7 @@ import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import { Inject, Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { Cache } from "cache-manager";
+import hash from "object-hash";
 
 import combineFilters from "utils/combineFilters";
 
@@ -10,15 +11,14 @@ import {
 	IAttribute,
 	IAttributeMap,
 	IAttributeWithOption,
+	IBaseSearchParamsDto,
+	IFiltersBodyDto,
 	IProduct,
+	IProductSearchParamsDto,
 	IProductsWithMeta,
 	IRangeOption,
-	ISearchFilters,
-	ISearchParams,
 	ISelectableOption,
 } from "./interfaces/product.interface";
-
-const hash = require("object-hash");
 
 @Injectable()
 export class ProductService {
@@ -33,12 +33,12 @@ export class ProductService {
 	 * @param searchFilters Фильтры поиска
 	 * @returns Товары с метаданными для пагинации
 	 */
-	async searchProducts(searchParams: ISearchParams, searchFilters: ISearchFilters) {
+	async searchProducts(searchParams: IProductSearchParamsDto, filtersBody: IFiltersBodyDto) {
 		let withQueryFilters: Prisma.Sql;
-		if (Object.keys(searchFilters).length !== 0) {
+		if (Object.keys(filtersBody).length !== 0) {
 			withQueryFilters = await this._withQueryFilters(
 				searchParams.category,
-				searchFilters,
+				filtersBody,
 				searchParams.lang,
 			);
 		}
@@ -96,17 +96,24 @@ export class ProductService {
 	 * @param locale Язык
 	 * @returns Фасеты для фильтра
 	 */
-	async getFacets(categoryId: number, searchFilters: ISearchFilters, locale: string) {
+	async getFacets(searchParams: IBaseSearchParamsDto, filtersBody: IFiltersBodyDto) {
 		let withQueryFilters: Prisma.Sql;
-		if (Object.keys(searchFilters).length !== 0) {
-			withQueryFilters = await this._withQueryFilters(categoryId, searchFilters, locale);
+		if (Object.keys(filtersBody).length !== 0) {
+			withQueryFilters = await this._withQueryFilters(
+				searchParams.category,
+				filtersBody,
+				searchParams.lang,
+			);
 		}
 
-		const facets: IAttributeMap = await this._getAttributes(categoryId, locale);
+		const facets: IAttributeMap = await this._getAttributes(
+			searchParams.category,
+			searchParams.lang,
+		);
 
 		const options = [
-			...(await this._getSelectableOptions(categoryId, withQueryFilters)),
-			...(await this._getRangeOptions(categoryId)),
+			...(await this._getSelectableOptions(searchParams.category, withQueryFilters)),
+			...(await this._getRangeOptions(searchParams.category)),
 		];
 
 		for (const o of options) {
@@ -125,7 +132,7 @@ export class ProductService {
 	 */
 	private async _withQueryFilters(
 		categoryId: number,
-		filters: ISearchFilters,
+		filters: IFiltersBodyDto,
 		locale: string,
 	): Promise<Prisma.Sql> {
 		const hashKey = hash(filters);
@@ -172,7 +179,7 @@ export class ProductService {
 	 * @returns Товары
 	 */
 	private async _getProducts(
-		searchParams: ISearchParams,
+		searchParams: IProductSearchParamsDto,
 		withQueryFilters: Prisma.Sql,
 	): Promise<IProduct[]> {
 		const { category, page, limit, sortBy, lang } = searchParams;
