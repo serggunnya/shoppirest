@@ -17,4 +17,13 @@ export class CategoryController {
 	allCategories(@Query("lang") lang: string = "ru") {
 		return this.categoryService.getAllCategories(lang);
 	}
+
+	@Get("/:slug")
+	@Version("1")
+	@ApiQuery({ name: "slug", required: true })
+	@ApiOperation({ summary: "Get category id by slug", operationId: "2" })
+	@ApiResponse({ status: 200, type: CategorySwaggerDoc })
+	categoryBySlug(@Query("slug") slug: string) {
+		return this.categoryService.getCategoryIdBySlug(slug);
+	}
 }
