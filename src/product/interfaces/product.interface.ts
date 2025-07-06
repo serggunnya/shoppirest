@@ -21,7 +21,7 @@ export enum ProductSortingEnum {
 }
 
 export interface IBaseSearchParamsDto {
-	category: number;
+	category: string;
 	lang?: string;
 }
 
@@ -29,6 +29,10 @@ export interface IProductSearchParamsDto extends IBaseSearchParamsDto {
 	page?: number;
 	limit?: number;
 	sortBy?: ProductSortingEnum;
+}
+
+export interface IProductSearchParams extends Omit<IProductSearchParamsDto, "category"> {
+	categoryId: number;
 }
 
 export interface IProductImage extends product_images {
@@ -56,8 +60,24 @@ export interface IProduct extends products {
 	properties: IProductProp[];
 	images: IProductImage[];
 	is_active: boolean;
+	total_count?: number;
 	created_at: Date;
 	updated_at: Date;
+}
+
+export interface IProductWithDetails extends Omit<IProduct, "properties"> {
+	details: IProductDetails[];
+}
+
+export interface IProductDetails {
+	value: string | number | boolean;
+	unit_div?: number;
+	alias: string;
+	type: string;
+	name: string;
+	description: string;
+	display_value: Record<string, string> | null;
+	order: number;
 }
 
 export interface IProductProp {

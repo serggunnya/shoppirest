@@ -28,7 +28,7 @@ export class ProductController {
 	//---------------------------------------------------------------------------
 	@Post("/search")
 	@Version("1")
-	@ApiQuery({ name: "category", required: true, default: 1 })
+	@ApiQuery({ name: "category", required: true, default: "smartphones" })
 	@ApiQuery({ name: "page", required: true, default: 1 })
 	@ApiQuery({ name: "limit", required: false, default: 5 })
 	@ApiQuery({ name: "sortBy", required: false, default: "default" })
@@ -52,7 +52,7 @@ export class ProductController {
 	//---------------------------------------------------------------------------
 	@Post("/facets")
 	@Version("1")
-	@ApiQuery({ name: "category", required: true, default: 1 })
+	@ApiQuery({ name: "category", required: true, default: "smartphones" })
 	@ApiQuery({ name: "lang", required: false, default: "ru" })
 	@ApiBody({
 		required: false,
