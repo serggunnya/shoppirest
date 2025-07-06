@@ -61,8 +61,8 @@ export class ProductService {
 	}
 
 	//================  Получение товара по идентификатору с деталями
-	async getProductDetails(id: number, lang: string) {
-		const products = await this._getProductById(id, lang);
+	async getProductDetails(slug: string, lang: string) {
+		const products = await this._getProductBySlug(slug, lang);
 		const attributes = await this._getAttributes(products[0].category_id, lang, true);
 		const aliases = Object.keys(attributes);
 
@@ -120,7 +120,7 @@ export class ProductService {
 	}
 
 	//================  Приватный метод для получения товара по идентификатору
-	private async _getProductById(id: number, lang: string): Promise<IProductWithDetails[]> {
+	private async _getProductBySlug(slug: string, lang: string): Promise<IProductWithDetails[]> {
 		return await this.prisma.$queryRaw`			
 			SELECT p.id, p.category_id, p.slug, p.sku, pt.name, 
 				pt.description, p.price, p.discount, 
@@ -132,7 +132,7 @@ export class ProductService {
 			LEFT JOIN product_images pi ON pi.product_id = p.id
 			LEFT JOIN reviews r ON r.product_id = p.id AND r.is_moderated = true
 			LEFT JOIN product_translations pt on pt.product_id = p.id AND pt.locale = ${lang}
-			WHERE p.id = ${id}
+			WHERE p.slug = ${slug}
 			GROUP BY p.id, pt.name, pt.description
 			`;
 	}

@@ -1,5 +1,4 @@
 import { Body, Controller, Get, Param, Post, Query, Version } from "@nestjs/common";
-import { ParseIntPipe } from "@nestjs/common/pipes";
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 
 import { BaseSearchParamsDto } from "./dto/BaseSearchParamsDto";
@@ -71,13 +70,13 @@ export class ProductController {
 	}
 
 	//---------------------------------------------------------------------------
-	@Get(":id")
+	@Get(":slug")
 	@Version("1")
-	@ApiParam({ name: "id", required: true })
+	@ApiParam({ name: "slug", required: true })
 	@ApiQuery({ name: "lang", required: false, default: "ru" })
 	@ApiResponse({ status: 200, type: ProductSwaggerDoc })
 	@ApiOperation({ summary: "Get product by Id" })
-	getProductById(@Param("id", ParseIntPipe) id: number, @Query("lang") locale: string = "ru") {
-		return this.productService.getProductDetails(id, locale);
+	getProductById(@Param("slug") slug: string, @Query("lang") locale: string = "ru") {
+		return this.productService.getProductDetails(slug, locale);
 	}
 }
