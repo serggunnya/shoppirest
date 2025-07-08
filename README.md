@@ -1,6 +1,6 @@
 ## Приложение Интернет магазин.
 
-React, RTK query, Typescript, Nest, Postgres(Supabase), hosting (Render.com)
+Typescript, Nest, Passport, JWT, Postgres(JSONB), Supabase, Render.com
 
 - [x] - Авторизация c помощью JWT пары (access и refresh token)
 - [x] - Ротация токенов
@@ -11,24 +11,49 @@ React, RTK query, Typescript, Nest, Postgres(Supabase), hosting (Render.com)
 - [x] - Фильтрация товаров по множеству атрибутам
 - [x] - Получение деталей товара
 - [x] - Получение и создание отзывов товара
+- [ ] - Добавление товара в корзину
 
-### Клиентское React приложение
-
-- https://shoppirest.onrender.com
-
-### Swagger спецификация API
+### Swagger UI документация
 
 - https://shoppirest-api.onrender.com/docs
 
-#### Скрипты (package.json)
+### Схема базы данных
+
+![схема](schema.png?raw=true)
+
+### API Эндпоинты
+
+| Метод  | Путь                             | Описание                                     |
+| :----- | :------------------------------- | :------------------------------------------- |
+| `GET`  | `/api/v1/categories`             | Получение списка категорий                   |
+| `POST` | `/api/v1/products/search`        | Поиск продуктов с фильтрацией (тело запроса) |
+| `POST` | `/api/v1/products/facets`        | Получение фасетов (фильтров) для категории   |
+| `GET`  | `/api/v1/products/{slug}`        | Получение деталей продукта по его slug       |
+| `GET`  | `/api/v1/reviews?productId={id}` | Получение отзывов для продукта               |
+
+### **Общее описание**
+
+- В качестве бэкенда используется **NestJS**
+- Использует **Prisma** как ORM для работы с базой данных **Postgeres** (Supabase)
+- Для реализации параметров товаров используется JSONB
+- Используется кэширование атрибутов и некоторых опций через `@nestjs/cache-manager`
+
+##### **Особенности реализации:**
+
+- Поддержка версионирование API
+- Поддерживает фильтрацию по различным атрибутам продуктов
+- Работает с JSONB в базе данных (поле `properties`)
+- Используются raw SQL-запросы через `prisma.$queryRaw`
+- Реализует кэширование для:
+  - Атрибутов категорий
+  - Числовых опций атрибутов
+    |
+
+### Скрипты (package.json)
 
 `nest:dev`- запуск сервера в режиме разработки
 
-`react:dev` - запуск react клиента в режиме разработки
-
-`start:dev` - запуск сервера и react клиента
-
-`nest:build` - сборка сервера
+`nest:build` - сборка приложения
 
 `prisma:gen` - сгенерировать PrismaClient на основе файла schema.prisma.
 
@@ -36,41 +61,41 @@ React, RTK query, Typescript, Nest, Postgres(Supabase), hosting (Render.com)
 
 `prisma:seed` - заполнить таблицы данными на основе файла seed.ts
 
-#### Переменные окружения
+### Начало работы
 
-- SUPABASE_URL =""
-- SUPABASE_KEY =""
-- DATABASE_URL =""
-- ACCESS_SECRET =""
-- REFRESH_SECRET =""
+1.  Установите зависимости
+    ```sh
+    npm install
+    ```
+2.  Создайте файл `.env` в корне проекта и заполните его по примеру из раздела "Переменные окружения".
+3.  Примените миграции базы данных
+    ```sh
+    npm run prisma:push
+    ```
+4.  Заполните БД начальными данными
+    ```sh
+    npm run prisma:seed
+    ```
+5.  Запустите сервер в режиме разработки
+    ```sh
+    npm run nest:dev
+    ```
 
-### Бэкэнд
+### Переменные окружения
 
-1. **Общее описание:**
+Для запуска проекта необходимо создать файл `.env` в корневой директории и добавить в него следующие переменные:
 
-- В качестве бэкенда используется **NestJS**
-- Использует **Prisma** как ORM для работы с базой данных **Postgeres** (Supabase)
-- Реализует кэширование через `@nestjs/cache-manager`
+```dotenv
+# Supabase/Postgres
+SUPABASE_KEY="your_supabase_key"
+SUPABASE_URL="your_supabase_url"
+DATABASE_URL="your_database_url"
 
-2. **Основной функционал:**
+# JWT Secrets
+ACCESS_SECRET="your_super_secret_access_key"
+REFRESH_SECRET="your_super_secret_refresh_key"
 
-- Получение списка продуктов (`api/v1/products/search`)
-- Получение фасетов (фильтров) для категории (`api/v1/products/facets`)
-- Получение детелей продукта по ID (`api/v1/products/{id}`)
-- Получение отзывов продукта (`api/v1/reviews`)
-- Получение категорий (`api/v1/categories`)
-
-3. **Особенности реализации:**
-
-- Поддержка версионирование API
-- Поддерживает фильтрацию по различным атрибутам продуктов
-- Работает с JSON-полями в базе данных (поле `properties`)
-- Использует сырые SQL-запросы через `prisma.$queryRaw`
-- Реализует кэширование для:
-  - Атрибутов категорий
-  - Числовых опций атрибутов
-  - SQL-фильтров
-
-### База данных
-
-![схема](schema.png?raw=true)
+# Application
+PORT=5000
+ORIGIN="http://localhost:3000"
+```
