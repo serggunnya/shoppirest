@@ -5,8 +5,8 @@ import { Response } from "express";
 
 import { AuthService } from "auth/auth.service";
 import { LoginDto } from "auth/dto/login.dto";
-import { RegisterDto } from "auth/dto/register.dto";
 import { AuthResponseSwaggerDoc } from "auth/swagger/authResponseSwaggerDoc";
+
 import { RequestWithToken, RequestWithUser } from "./interfaces/auth.interface";
 
 @ApiTags("Auth")
@@ -14,19 +14,19 @@ import { RequestWithToken, RequestWithUser } from "./interfaces/auth.interface";
 export class AuthController {
 	constructor(private authService: AuthService) {}
 
-	@Post("register")
-	@Version("1")
-	@ApiOperation({ summary: "Register a new user", operationId: "1" })
-	@ApiResponse({
-		status: 201,
-		description: "User registered successfully",
-		type: AuthResponseSwaggerDoc,
-	})
-	@ApiResponse({ status: 403, description: "Credentials taken" })
-	@ApiBody({ type: RegisterDto })
-	register(@Body() userData: RegisterDto, @Res({ passthrough: true }) res: Response) {
-		return this.authService.register(userData, res);
-	}
+	// @Post("register")
+	// @Version("1")
+	// @ApiOperation({ summary: "Register a new user", operationId: "1" })
+	// @ApiResponse({
+	// 	status: 201,
+	// 	description: "User registered successfully",
+	// 	type: AuthResponseSwaggerDoc,
+	// })
+	// @ApiResponse({ status: 403, description: "Credentials taken" })
+	// @ApiBody({ type: RegisterDto })
+	// register(@Body() userData: RegisterDto, @Res({ passthrough: true }) res: Response) {
+	// 	return this.authService.register(userData, res);
+	// }
 
 	@Post("login")
 	@Version("1")
