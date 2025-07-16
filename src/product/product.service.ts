@@ -8,6 +8,7 @@ import combineFilters from "utils/combineFilters";
 
 import { PrismaService } from "../prisma/prisma.service";
 import {
+	AttributeType,
 	IAttribute,
 	IAttributeMap,
 	IAttributeWithOption,
@@ -89,21 +90,52 @@ export class ProductService {
 	//================  Получает фасеты для фильтра текущей категории
 	async getFacets(searchParams: IBaseSearchParamsDto, filtersBody: IFiltersBodyDto) {
 		const categoryId = await this.categoryService.getCategoryIdBySlug(searchParams.category);
-
-		let withQueryFilters: Prisma.Sql;
-		if (Object.keys(filtersBody).length !== 0) {
-			withQueryFilters = await this._withQueryFilters(categoryId, filtersBody, searchParams.lang);
-		}
-
 		const facets: IAttributeMap = await this._getAttributes(categoryId, searchParams.lang);
 
-		const options = [
-			...(await this._getSelectableOptions(categoryId, withQueryFilters)),
-			...(await this._getRangeOptions(categoryId)),
-		];
+		const filterableAliases = Object.keys(facets);
+		const facetPromises: Promise<ISelectableOption[] | IRangeOption[]>[] = []; // массив промисов для фасетных групп
 
-		for (const o of options) {
-			facets[o.alias].options.push(o);
+		for (const alias of filterableAliases) {
+			const attribute = facets[alias];
+
+			if (
+				attribute.type === AttributeType.STRING ||
+				attribute.type === AttributeType.TEXT ||
+				attribute.type === AttributeType.NUMBER ||
+				attribute.type === AttributeType.BOOLEAN
+			) {
+				//создаём промис вычисления опций группы
+				const promise = (async () => {
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
+					const { [alias]: _excluded, ...restFilters } = filtersBody; // Полуаем фильтры БЕЗ текущего атрибута
+
+					let withFiltersQueryByAlias: Prisma.Sql;
+					if (Object.keys(restFilters).length > 0) {
+						withFiltersQueryByAlias = await this._withQueryFilters(
+							categoryId,
+							restFilters,
+							searchParams.lang,
+						);
+					}
+
+					return this._getSelectableOptionsGroup(categoryId, alias, withFiltersQueryByAlias);
+				})();
+
+				facetPromises.push(promise);
+			}
+		}
+
+		// добавляем rangeOptions
+		facetPromises.push(this._getRangeOptions(categoryId));
+
+		const results: (ISelectableOption | IRangeOption)[][] = await Promise.all(facetPromises);
+		const allOptions: (ISelectableOption | IRangeOption)[] = results.flat();
+
+		// маппинг полученых опций с атрибутами.
+		for (const option of allOptions) {
+			if (Object.prototype.hasOwnProperty.call(facets, option.alias)) {
+				facets[option.alias].options.push(option);
+			}
 		}
 
 		return Object.values(facets);
@@ -212,33 +244,32 @@ export class ProductService {
 	}
 
 	//================  Приватный метод для получения отмечаемых опций аттрибутов
-	private async _getSelectableOptions(
+	private async _getSelectableOptionsGroup(
 		categoryId: number,
-		withQueryFilters: Prisma.Sql,
+		alias: string,
+		withFiltersQueryByAlias: Prisma.Sql,
 	): Promise<ISelectableOption[]> {
 		return this.prisma.$queryRaw`
-        WITH ${
-					withQueryFilters ? Prisma.sql`query_filters AS (${withQueryFilters}),` : Prisma.empty
-				}        
-        selectable_options AS ( 
-          SELECT p.id, 
-          (jsonb_each(p.properties)).key AS alias, 
-          (jsonb_each(p.properties)).value AS data 
-          FROM products p 
-          WHERE p.category_id = ${categoryId} AND p.is_active = true 
+        WITH         
+        ${withFiltersQueryByAlias ? Prisma.sql`partial_filters AS (${withFiltersQueryByAlias}),` : Prisma.empty}        
+        all_options_for_alias AS ( 
+            SELECT p.id, p.properties -> ${alias} AS data
+            FROM products p 
+            WHERE p.category_id = ${categoryId} 
+              AND p.is_active = true
+              AND p.properties ? ${alias}
+              AND p.properties -> ${alias} IS NOT NULL
+              AND p.properties -> ${alias} != 'null'::jsonb
         )
-        SELECT so.alias, so.data, 
-        COUNT(${withQueryFilters ? Prisma.sql`qf.id` : Prisma.sql`so.id`})::int as "amount" 
-        FROM selectable_options so 
-        JOIN attributes a ON so.alias = a.alias
-        ${withQueryFilters ? Prisma.sql`LEFT JOIN query_filters qf ON qf.id = so.id` : Prisma.empty}
-        WHERE a.is_filterable = true 
-        AND a.type IN ('STRING', 'TEXT', 'NUMBER', 'BOOLEAN') 
-        AND so.data IS NOT NULL 
-        AND so.data::text != 'null'
-        GROUP BY so.alias, so.data 
-        HAVING COUNT(so.id)::int > 0 
-      `;
+        SELECT 
+            ${alias} as alias, 
+            ao.data, 
+            COUNT(${withFiltersQueryByAlias ? Prisma.sql`pf.id` : Prisma.sql`ao.id`})::int as "amount"
+        FROM all_options_for_alias ao
+        ${withFiltersQueryByAlias ? Prisma.sql`LEFT JOIN partial_filters pf ON pf.id = ao.id` : Prisma.empty}
+        GROUP BY ao.data
+        HAVING COUNT(ao.id)::int > 0;
+    `;
 	}
 
 	//================  Приватный метод для получения опций аттрибутов с диапазоном значений
