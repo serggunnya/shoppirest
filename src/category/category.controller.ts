@@ -1,5 +1,5 @@
-import { Controller, Get, Query, Version } from "@nestjs/common";
-import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { Controller, Get, Param, Query, Version } from "@nestjs/common";
+import { ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 
 import { CategoryService } from "./category.service";
 import { CategorySwaggerDoc } from "./swagger/category.swagger";
@@ -18,13 +18,13 @@ export class CategoryController {
 		return this.categoryService.getAllCategories(lang);
 	}
 
-	@Get("/:slug")
+	@Get(":slug")
 	@Version("1")
-	@ApiQuery({ name: "slug", required: true, default: "gadgets" })
+	@ApiParam({ name: "slug", required: true })
 	@ApiQuery({ name: "lang", required: true, default: "ru" })
 	@ApiOperation({ summary: "Get category id by slug", operationId: "2" })
 	@ApiResponse({ status: 200, type: CategorySwaggerDoc })
-	categoryBySlug(@Query("slug") slug: string, @Query("lang") lang: string) {
+	categoryBySlug(@Param("slug") slug: string, @Query("lang") lang: string) {
 		return this.categoryService.getCategoryBySlug(slug, lang);
 	}
 }
