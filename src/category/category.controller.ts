@@ -20,10 +20,11 @@ export class CategoryController {
 
 	@Get("/:slug")
 	@Version("1")
-	@ApiQuery({ name: "slug", required: true })
+	@ApiQuery({ name: "slug", required: true, default: "gadgets" })
+	@ApiQuery({ name: "lang", required: true, default: "ru" })
 	@ApiOperation({ summary: "Get category id by slug", operationId: "2" })
 	@ApiResponse({ status: 200, type: CategorySwaggerDoc })
-	categoryBySlug(@Query("slug") slug: string) {
-		return this.categoryService.getCategoryIdBySlug(slug);
+	categoryBySlug(@Query("slug") slug: string, @Query("lang") lang: string) {
+		return this.categoryService.getCategoryBySlug(slug, lang);
 	}
 }

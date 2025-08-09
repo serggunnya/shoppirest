@@ -1,5 +1,6 @@
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import { Inject, Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { Cache } from "cache-manager";
 
 import { PrismaService } from "../prisma/prisma.service";
@@ -24,18 +25,53 @@ export class CategoryService {
 	}
 
 	// Метод получения категории по слагу
-	async getCategoryIdBySlug(slug: string): Promise<number> {
-		const cacheKey = `category:${slug}`;
-		const cachedCategory = await this.cacheService.get<number>(cacheKey);
+	async getCategoryBySlug(slug: string, lang: string): Promise<ICategory> {
+		const cacheKey = `category:${slug}:${lang}`;
+		const cachedCategory = await this.cacheService.get<ICategory>(cacheKey);
 
 		if (cachedCategory) {
 			return cachedCategory;
 		}
 
-		const cache_ttl = 1000 * 60 * 10;
-		const category = await this.prisma.categories.findFirst({ where: { slug } });
-		await this.cacheService.set(cacheKey, category.id, cache_ttl);
+		const baseQueryRaw = Prisma.sql`
+        WITH RECURSIVE CategoryWithTranslation AS (
+            -- Базовая часть: находим основную категорию по slug
+            SELECT c.*, ct.name, ct.description
+            FROM categories c
+            JOIN category_translations ct ON ct.category_id = c.id AND ct.locale = ${lang}
+            WHERE c.is_active = TRUE AND c.slug = ${slug}
+            UNION ALL
+            -- Рекурсивная часть: находим прямых потомков категории
+            SELECT c_child.*, ct_child.name, ct_child.description
+            FROM categories c_child
+            JOIN category_translations ct_child ON ct_child.category_id = c_child.id AND ct_child.locale = ${lang}
+            JOIN CategoryWithTranslation p ON c_child.parent_id = p.id
+            WHERE c_child.is_active = TRUE
+        )
+        SELECT * FROM CategoryWithTranslation;
+    `;
 
-		return category.id;
+		const categoriesAndChildren: ICategory[] = await this.prisma.$queryRaw(baseQueryRaw);
+
+		if (categoriesAndChildren.length === 0) {
+			return null;
+		}
+
+		// Находим родительскую категорию
+		const parentCategory = categoriesAndChildren.find((c) => c.slug === slug);
+
+		if (!parentCategory) {
+			return null;
+		}
+
+		// Находим дочерние категории
+		const childrenCategories = categoriesAndChildren.filter((c) => c.id !== parentCategory.id);
+
+		parentCategory.children = childrenCategories;
+
+		const cache_ttl = 1000 * 60 * 10;
+		await this.cacheService.set(cacheKey, parentCategory, cache_ttl);
+
+		return parentCategory;
 	}
 }

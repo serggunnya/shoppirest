@@ -34,14 +34,17 @@ export class ProductService {
 
 	//================ Поиск товаров с применением фильтров
 	async searchProducts(searchParams: IProductSearchParamsDto, filtersBody: IFiltersBodyDto) {
-		const categoryId = await this.categoryService.getCategoryIdBySlug(searchParams.category);
+		const category = await this.categoryService.getCategoryBySlug(
+			searchParams.category,
+			searchParams.lang,
+		);
 
 		let withQueryFilters: Prisma.Sql;
 		if (Object.keys(filtersBody).length !== 0) {
-			withQueryFilters = await this._withQueryFilters(categoryId, filtersBody, searchParams.lang);
+			withQueryFilters = await this._withQueryFilters(category.id, filtersBody, searchParams.lang);
 		}
 
-		const params = { categoryId, ...searchParams };
+		const params = { categoryId: category.id, ...searchParams };
 		const data = await this._getProducts(params, withQueryFilters);
 
 		const products = data?.length ? data : [];
@@ -89,8 +92,11 @@ export class ProductService {
 
 	//================  Получает фасеты для фильтра текущей категории
 	async getFacets(searchParams: IBaseSearchParamsDto, filtersBody: IFiltersBodyDto) {
-		const categoryId = await this.categoryService.getCategoryIdBySlug(searchParams.category);
-		const facets: IAttributeMap = await this._getAttributes(categoryId, searchParams.lang);
+		const category = await this.categoryService.getCategoryBySlug(
+			searchParams.category,
+			searchParams.lang,
+		);
+		const facets: IAttributeMap = await this._getAttributes(category.id, searchParams.lang);
 
 		const filterableAliases = Object.keys(facets);
 		const facetPromises: Promise<ISelectableOption[] | IRangeOption[]>[] = []; // массив промисов для фасетных групп
@@ -112,13 +118,13 @@ export class ProductService {
 					let withFiltersQueryByAlias: Prisma.Sql;
 					if (Object.keys(restFilters).length > 0) {
 						withFiltersQueryByAlias = await this._withQueryFilters(
-							categoryId,
+							category.id,
 							restFilters,
 							searchParams.lang,
 						);
 					}
 
-					return this._getSelectableOptionsGroup(categoryId, alias, withFiltersQueryByAlias);
+					return this._getSelectableOptionsGroup(category.id, alias, withFiltersQueryByAlias);
 				})();
 
 				facetPromises.push(promise);
@@ -126,7 +132,7 @@ export class ProductService {
 		}
 
 		// добавляем rangeOptions
-		facetPromises.push(this._getRangeOptions(categoryId));
+		facetPromises.push(this._getRangeOptions(category.id));
 
 		const results: (ISelectableOption | IRangeOption)[][] = await Promise.all(facetPromises);
 		const allOptions: (ISelectableOption | IRangeOption)[] = results.flat();
