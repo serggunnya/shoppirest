@@ -182,7 +182,7 @@ model units {
 model category_attributes {
   id            Int       @id @default(autoincrement())
   category_id   Int
-  attribute_id  Int
+  attribute_id  Int 
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt 
   
@@ -200,8 +200,8 @@ model products {
   slug          String      @unique
   sku           String      @unique
   price         Decimal     @db.Decimal(10,2)
-  discount      Decimal?    @db.Decimal(10,2)
-  old_price      Decimal?    @db.Decimal(10,2)
+  discount      Decimal     @db.Decimal(10,2) @default(0)
+  old_price     Decimal     @db.Decimal(10,2) @default(0)
   stock         Int         @default(0)
   category_id   Int
   properties    Json        @db.JsonB
@@ -212,7 +212,7 @@ model products {
   //   "ram": {"value": 8},
   //   "storage": {"value": 64}
   // }
-  is_active      Boolean     @default(true)
+  is_active      Boolean    @default(true)
   created_at    DateTime    @default(now())
   updated_at    DateTime    @updatedAt
   
