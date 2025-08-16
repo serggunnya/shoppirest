@@ -2,38 +2,30 @@ import { Prisma } from "@prisma/client";
 
 import {
 	AttributeType,
-	IAttributeMap,
-	IFiltersBodyDto,
-	RangeValueBodyDto,
-	SelectValueBodyDto,
+	FacetsMap,
+	FiltersRequestData,
+	RangeValueRequest,
+	SelectValueRequest,
 } from "../product/interfaces/product.interface";
 
-/**
- * Создание запроса фильтрации
- * @param {number} categoryId - id категории
- * @param {ISearchFilters} searchFilters - фильтры
- * @param {IAttributeMap} attributeMap - атрибуты
- * @returns {Prisma.Sql} - запрос фильтрации
- */
+// Создание запроса фильтрации
 const combineFilters = (
 	categoryId: number,
-	searchFilters: IFiltersBodyDto,
-	attributeMap: IAttributeMap,
+	filtersRequestData: FiltersRequestData,
+	attributeMap: FacetsMap,
 ): Prisma.Sql => {
 	try {
-		const keys = Object.keys(searchFilters);
+		const keys = Object.keys(filtersRequestData);
 		const conditions: Prisma.Sql[] = [Prisma.empty];
 
 		for (const alias of keys) {
 			const type = attributeMap[alias]?.type;
-			const data = searchFilters[alias];
+			const data = filtersRequestData[alias];
 
-			if (type === AttributeType.NUMERIC) {
-				const condition = createRangeCondition(alias, data as RangeValueBodyDto);
-				conditions.push(condition);
+			if (type === "NUMERIC") {
+				conditions.push(createRangeCondition(alias, data as RangeValueRequest));
 			} else {
-				const condition = createSelectCondition(alias, data as SelectValueBodyDto, type);
-				conditions.push(condition);
+				conditions.push(createSelectCondition(alias, type, data as SelectValueRequest));
 			}
 		}
 
@@ -51,14 +43,14 @@ const combineFilters = (
 
 const createSelectCondition = (
 	alias: string,
-	data: SelectValueBodyDto,
 	type: AttributeType,
+	data: SelectValueRequest,
 ): Prisma.Sql => {
 	let castType = Prisma.empty;
 
-	if (type === AttributeType.BOOLEAN) {
+	if (type === "BOOLEAN") {
 		castType = Prisma.sql`boolean`;
-	} else if (type === AttributeType.NUMBER) {
+	} else if (type === "NUMBER") {
 		castType = Prisma.sql`numeric`;
 	} else {
 		castType = Prisma.sql`text`;
@@ -68,7 +60,7 @@ const createSelectCondition = (
 	 AND (p.properties -> ${alias} ->>'value')::${castType} IN (${Prisma.join(data.val)})`;
 };
 
-const createRangeCondition = (alias: string, data: RangeValueBodyDto): Prisma.Sql => {
+const createRangeCondition = (alias: string, data: RangeValueRequest): Prisma.Sql => {
 	if (alias === "price") {
 		return Prisma.sql`
 			${data?.min ? Prisma.sql` AND p.price >= ${data?.min}` : Prisma.empty}

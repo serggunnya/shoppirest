@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post, Query, Version } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 
-import { BaseSearchParamsDto } from "./dto/BaseSearchParamsDto";
-import { ProductSearchParamsDto } from "./dto/ProductSearchParamsDto";
-import { IFiltersBodyDto } from "./interfaces/product.interface";
+import { FacetRequestParamsDto } from "./dto/FacetRequestParamsDto";
+import { ProductParamsDto } from "./dto/ProductParamsDto";
+import { FiltersRequestData } from "./interfaces/product.interface";
 import { ProductService } from "./product.service";
 import { FacetSwaggerDoc } from "./swagger/Facet.swagger";
 import { ProductResponseSwaggerDoc, ProductSwaggerDoc } from "./swagger/Product.swagger";
@@ -42,10 +42,10 @@ export class ProductController {
 	@ApiResponse({ status: 200, type: ProductResponseSwaggerDoc })
 	@ApiOperation({ summary: "Get list of products", operationId: "1" })
 	searchProducts(
-		@Query() searchParams: ProductSearchParamsDto,
-		@Body() filtersBody: IFiltersBodyDto,
+		@Query() searchParams: ProductParamsDto,
+		@Body() filtersRequestData: FiltersRequestData,
 	) {
-		return this.productService.searchProducts(searchParams, filtersBody);
+		return this.productService.searchProducts(searchParams, filtersRequestData);
 	}
 
 	//---------------------------------------------------------------------------
@@ -63,10 +63,10 @@ export class ProductController {
 	@ApiResponse({ status: 200, type: FacetSwaggerDoc, isArray: true })
 	@ApiOperation({ summary: "Get list of all or filtered attributes with available options" })
 	getFacetsByCategoryIdV1(
-		@Query() searchParams: BaseSearchParamsDto,
-		@Body() filtersBody: IFiltersBodyDto,
+		@Query() facetRequestParams: FacetRequestParamsDto,
+		@Body() filtersRequestData: FiltersRequestData,
 	) {
-		return this.productService.getFacets(searchParams, filtersBody);
+		return this.productService.getFacets(facetRequestParams, filtersRequestData);
 	}
 
 	//---------------------------------------------------------------------------

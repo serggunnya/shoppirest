@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import { Cache } from "cache-manager";
 
 import { PrismaService } from "../prisma/prisma.service";
-import { ICategory } from "./interfaces/category.interface";
+import { Category } from "./interfaces/category.interface";
 
 @Injectable()
 export class CategoryService {
@@ -14,7 +14,7 @@ export class CategoryService {
 	) {}
 
 	// Метод получения категорий
-	async getAllCategories(locale: string): Promise<ICategory[]> {
+	async getAllCategories(locale: string): Promise<Category[]> {
 		return await this.prisma.$queryRaw`
 			select 
 				c.id, c.slug, ct."name", ct.description, 
@@ -25,9 +25,9 @@ export class CategoryService {
 	}
 
 	// Метод получения категории по слагу
-	async getCategoryBySlug(slug: string, lang: string): Promise<ICategory> {
+	async getCategoryBySlug(slug: string, lang: string): Promise<Category> {
 		const cacheKey = `category:${slug}:${lang}`;
-		const cachedCategory = await this.cacheService.get<ICategory>(cacheKey);
+		const cachedCategory = await this.cacheService.get<Category>(cacheKey);
 
 		if (cachedCategory) {
 			return cachedCategory;
@@ -51,7 +51,7 @@ export class CategoryService {
         SELECT * FROM CategoryWithTranslation;
     `;
 
-		const categoriesAndChildren: ICategory[] = await this.prisma.$queryRaw(baseQueryRaw);
+		const categoriesAndChildren: Category[] = await this.prisma.$queryRaw(baseQueryRaw);
 
 		if (categoriesAndChildren.length === 0) {
 			return null;

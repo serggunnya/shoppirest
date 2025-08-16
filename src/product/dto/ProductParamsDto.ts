@@ -1,9 +1,9 @@
 import { Transform } from "class-transformer";
 import { IsEnum, IsInt, IsOptional, IsString } from "class-validator";
 
-import { IProductSearchParamsDto, ProductSortingEnum } from "../interfaces/product.interface";
+import { ProductSortingEnum, ProductsRequestParams } from "../interfaces/product.interface";
 
-export class ProductSearchParamsDto implements IProductSearchParamsDto {
+export class ProductParamsDto implements ProductsRequestParams {
 	@IsString()
 	category: string;
 

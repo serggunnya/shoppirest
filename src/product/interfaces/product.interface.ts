@@ -1,18 +1,5 @@
 import { Prisma, attributes, product_images, products } from "@prisma/client";
 
-export interface RangeValueBodyDto {
-	min?: number;
-	max?: number;
-}
-
-export interface SelectValueBodyDto {
-	val: Array<string | number | boolean>;
-}
-
-export interface IFiltersBodyDto {
-	[key: string]: RangeValueBodyDto | SelectValueBodyDto;
-}
-
 export enum ProductSortingEnum {
 	DEFAULT = "default",
 	PRICE_ASC = "price_asc",
@@ -20,105 +7,39 @@ export enum ProductSortingEnum {
 	RATING = "rating",
 }
 
-export interface IBaseSearchParamsDto {
+export interface ProductsRequestParams {
 	category: string;
-	lang?: string;
-}
-
-export interface IProductSearchParamsDto extends IBaseSearchParamsDto {
 	page?: number;
+	lang?: string;
 	limit?: number;
 	sortBy?: ProductSortingEnum;
 }
 
-export interface IProductSearchParams extends Omit<IProductSearchParamsDto, "category"> {
-	categoryId: number;
+export interface FacetRequestParams {
+	category: string;
+	lang?: string;
 }
 
-export interface IProductImage extends product_images {
-	id: number;
-	product_id: number;
-	url: string;
-	order: number;
-	created_at: Date;
-	updated_at: Date;
+export interface SelectValueRequest {
+	val: Array<string | number | boolean>;
 }
 
-export interface IProduct extends products {
-	id: number;
-	slug: string;
-	sku: string;
-	category_id: number;
-	price: Prisma.Decimal;
-	discount: Prisma.Decimal;
-	old_price: Prisma.Decimal;
-	stock: number;
-	name?: string;
-	description?: string;
-	meta_title?: string;
-	meta_description?: string;
-	properties: IProductProp[];
-	images: IProductImage[];
-	is_active: boolean;
-	total_count?: number;
-	created_at: Date;
-	updated_at: Date;
+export interface RangeValueRequest {
+	min?: number;
+	max?: number;
 }
 
-export interface IProductWithDetails extends Omit<IProduct, "properties"> {
-	details: IProductDetails[];
-}
+export type FiltersRequestData = Record<string, SelectValueRequest | RangeValueRequest>;
 
-export interface IProductDetails {
-	value: string | number | boolean;
-	unit_div?: number;
+export interface AttributeStringOption {
 	alias: string;
-	type: string;
-	name: string;
-	description: string;
-	display_value: Record<string, string> | null;
-	order: number;
-}
-
-export interface IProductProp {
-	[key: string]: {
-		value: string | number | boolean;
-		unit_div?: number;
+	data: {
+		value: string;
 	};
+	amount: number;
 }
 
-export interface IProductsWithMeta {
-	products: IProduct[];
-	meta: {
-		total: number;
-		limit: number;
-		currentPage: number;
-		lastPage: number;
-	};
-}
-
-export enum AttributeType {
-	STRING = "STRING",
-	TEXT = "TEXT",
-	NUMBER = "NUMBER",
-	NUMERIC = "NUMERIC",
-	BOOLEAN = "BOOLEAN",
-}
-
-export interface IAttribute extends attributes {
-	id: number;
-	alias: string;
-	type: AttributeType;
-	name?: string;
-	description?: string;
-	display_value?: JSON;
-	is_filterable: boolean;
-	order: number;
-	created_at: Date;
-	updated_at: Date;
-}
-
-export interface ISelectableOption {
+export interface AttributeNumberOption {
 	alias: string;
 	data: {
 		value: string;
@@ -127,7 +48,15 @@ export interface ISelectableOption {
 	amount: number;
 }
 
-export interface IRangeOption {
+export interface AttributeBooleanOption {
+	alias: string;
+	data: {
+		value: boolean;
+	};
+	amount: number;
+}
+
+export interface AttributeRangeOption {
 	alias: string;
 	data: {
 		min: number;
@@ -135,10 +64,104 @@ export interface IRangeOption {
 	};
 }
 
-export interface IAttributeWithOption extends IAttribute {
-	options: Array<ISelectableOption | IRangeOption>;
+export interface AttributeOptionsMap {
+	TEXT: AttributeStringOption;
+	STRING: AttributeStringOption;
+	NUMBER: AttributeNumberOption;
+	BOOLEAN: AttributeBooleanOption;
+	NUMERIC: AttributeRangeOption;
 }
 
-export interface IAttributeMap {
-	[key: string]: IAttributeWithOption;
+export type AttributeType = keyof AttributeOptionsMap;
+
+export type AttributeOptionsArray = Array<AttributeOptionsMap[AttributeType]>;
+
+export interface Attribute extends attributes {
+	id: number;
+	alias: string;
+	type: AttributeType;
+	name: string;
+	description: string;
+	display_value: JSON | null;
+	is_filterable: boolean;
+	order: number;
+	created_at: Date;
+	updated_at: Date;
+}
+
+export interface BaseFacet<T extends AttributeType> extends Attribute {
+	type: T;
+	options: Array<AttributeOptionsMap[T]>;
+}
+
+export type TypedFacet = {
+	[K in AttributeType]: BaseFacet<K>;
+}[AttributeType];
+
+export type FacetsMap = Record<string, TypedFacet>;
+
+export interface ProductImage extends product_images {
+	id: number;
+	product_id: number;
+	url: string;
+	order: number;
+	created_at: Date;
+	updated_at: Date;
+}
+
+export interface Product extends products {
+	id: number;
+	category_id: number;
+	slug: string;
+	sku: string;
+	name: string;
+	description: string;
+	meta_title?: string;
+	meta_description?: string;
+	price: Prisma.Decimal;
+	discount: Prisma.Decimal;
+	old_price: Prisma.Decimal;
+	stock: number;
+	images: ProductImage[];
+	avg_rating: number;
+	review_count: number;
+	total_count?: number;
+}
+
+export interface ProductsResponse {
+	products: Product[];
+	meta: {
+		total: number;
+		limit: number;
+		currentPage: number;
+		lastPage: number;
+	};
+}
+
+export interface DetailValueMap {
+	TEXT: string;
+	STRING: string;
+	NUMBER: number;
+	NUMERIC: number;
+	BOOLEAN: boolean;
+}
+
+export type DetailType = keyof DetailValueMap;
+
+export interface BaseDetail<T extends DetailType> {
+	alias: string;
+	type: T;
+	name: string;
+	value: DetailValueMap[T];
+	unit_div?: number;
+	display_value: Record<string, string> | null;
+	order: number;
+}
+
+export type TypedDetail = {
+	[K in DetailType]: BaseDetail<K>;
+}[DetailType];
+
+export interface ProductDetail extends Omit<Product, "properties"> {
+	details: TypedDetail[];
 }

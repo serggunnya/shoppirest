@@ -8,20 +8,20 @@ import combineFilters from "utils/combineFilters";
 
 import { PrismaService } from "../prisma/prisma.service";
 import {
-	AttributeType,
-	IAttribute,
-	IAttributeMap,
-	IAttributeWithOption,
-	IBaseSearchParamsDto,
-	IFiltersBodyDto,
-	IProduct,
-	IProductDetails,
-	IProductSearchParams,
-	IProductSearchParamsDto,
-	IProductsWithMeta,
-	IProductWithDetails,
-	IRangeOption,
-	ISelectableOption,
+	Attribute,
+	AttributeBooleanOption,
+	AttributeNumberOption,
+	AttributeOptionsArray,
+	AttributeRangeOption,
+	AttributeStringOption,
+	FacetRequestParams,
+	FacetsMap,
+	FiltersRequestData,
+	Product,
+	ProductDetail,
+	ProductsRequestParams,
+	ProductsResponse,
+	TypedFacet,
 } from "./interfaces/product.interface";
 
 @Injectable()
@@ -33,7 +33,7 @@ export class ProductService {
 	) {}
 
 	//================ Поиск товаров с применением фильтров
-	async searchProducts(searchParams: IProductSearchParamsDto, filtersBody: IFiltersBodyDto) {
+	async searchProducts(searchParams: ProductsRequestParams, filtersBody: FiltersRequestData) {
 		const category = await this.categoryService.getCategoryBySlug(
 			searchParams.category,
 			searchParams.lang,
@@ -44,14 +44,13 @@ export class ProductService {
 			withQueryFilters = await this._withQueryFilters(category.id, filtersBody, searchParams.lang);
 		}
 
-		const params = { categoryId: category.id, ...searchParams };
-		const data = await this._getProducts(params, withQueryFilters);
+		const data = await this._getProducts(category.id, searchParams, withQueryFilters);
 
 		const products = data?.length ? data : [];
 		const total = data?.length ? products[0].total_count : 0;
 		const lastPage = data?.length ? Math.ceil(products[0].total_count / searchParams.limit) : 0;
 
-		const response: IProductsWithMeta = {
+		const response: ProductsResponse = {
 			products,
 			meta: {
 				total,
@@ -70,10 +69,10 @@ export class ProductService {
 		const attributes = await this._getAttributes(products[0].category_id, lang, true);
 		const aliases = Object.keys(attributes);
 
-		const details = [];
+		const details: ProductDetail[] = [];
 		for (const alias of aliases) {
 			if (alias !== "price") {
-				const detail = {
+				const detail: ProductDetail = {
 					...products[0].details[alias],
 					alias: attributes[alias].alias,
 					type: attributes[alias].type,
@@ -81,7 +80,7 @@ export class ProductService {
 					description: attributes[alias]?.description,
 					display_value: attributes[alias]?.display_value,
 					order: attributes[alias].order,
-				} as IProductDetails;
+				} as ProductDetail;
 
 				details.push(detail);
 			}
@@ -91,29 +90,25 @@ export class ProductService {
 	}
 
 	//================  Получает фасеты для фильтра текущей категории
-	async getFacets(searchParams: IBaseSearchParamsDto, filtersBody: IFiltersBodyDto) {
+	async getFacets(searchParams: FacetRequestParams, filtersBody: FiltersRequestData) {
 		const category = await this.categoryService.getCategoryBySlug(
 			searchParams.category,
 			searchParams.lang,
 		);
-		const facets: IAttributeMap = await this._getAttributes(category.id, searchParams.lang);
+		const facetsMap: FacetsMap = await this._getAttributes(category.id, searchParams.lang);
 
-		const filterableAliases = Object.keys(facets);
-		const facetPromises: Promise<ISelectableOption[] | IRangeOption[]>[] = []; // массив промисов для фасетных групп
+		const filterableAliases = Object.keys(facetsMap);
+
+		// массив промисов для фасетных групп
+		const optionsPromises: Promise<AttributeOptionsArray>[] = [];
 
 		for (const alias of filterableAliases) {
-			const attribute = facets[alias];
-
-			if (
-				attribute.type === AttributeType.STRING ||
-				attribute.type === AttributeType.TEXT ||
-				attribute.type === AttributeType.NUMBER ||
-				attribute.type === AttributeType.BOOLEAN
-			) {
+			if (facetsMap[alias].type !== "NUMERIC") {
 				//создаём промис вычисления опций группы
 				const promise = (async () => {
+					// Полуаем фильтры БЕЗ текущего атрибута
 					// eslint-disable-next-line @typescript-eslint/no-unused-vars
-					const { [alias]: _excluded, ...restFilters } = filtersBody; // Полуаем фильтры БЕЗ текущего атрибута
+					const { [alias]: _excluded, ...restFilters } = filtersBody;
 
 					let withFiltersQueryByAlias: Prisma.Sql;
 					if (Object.keys(restFilters).length > 0) {
@@ -127,30 +122,29 @@ export class ProductService {
 					return this._getSelectableOptionsGroup(category.id, alias, withFiltersQueryByAlias);
 				})();
 
-				facetPromises.push(promise);
+				optionsPromises.push(promise);
 			}
 		}
 
 		// добавляем rangeOptions
-		facetPromises.push(this._getRangeOptions(category.id));
+		optionsPromises.push(this._getRangeOptions(category.id));
 
-		const results: (ISelectableOption | IRangeOption)[][] = await Promise.all(facetPromises);
-		const allOptions: (ISelectableOption | IRangeOption)[] = results.flat();
+		const allOptions: AttributeOptionsArray = (await Promise.all(optionsPromises)).flat();
 
 		// маппинг полученых опций с атрибутами.
 		for (const option of allOptions) {
-			if (Object.prototype.hasOwnProperty.call(facets, option.alias)) {
-				facets[option.alias].options.push(option);
+			if (Object.prototype.hasOwnProperty.call(facetsMap, option.alias)) {
+				(facetsMap[option.alias].options as AttributeOptionsArray).push(option);
 			}
 		}
 
-		return Object.values(facets);
+		return Object.values(facetsMap);
 	}
 
 	//================  Приватный метод для получения запроса с фильтрами
 	private async _withQueryFilters(
 		categoryId: number,
-		filters: IFiltersBodyDto,
+		filters: FiltersRequestData,
 		locale: string,
 	): Promise<Prisma.Sql> {
 		const attributeMap = await this._getAttributes(categoryId, locale);
@@ -158,7 +152,7 @@ export class ProductService {
 	}
 
 	//================  Приватный метод для получения товара по идентификатору
-	private async _getProductBySlug(slug: string, lang: string): Promise<IProductWithDetails[]> {
+	private async _getProductBySlug(slug: string, lang: string): Promise<ProductDetail[]> {
 		return await this.prisma.$queryRaw`			
 			SELECT p.id, p.category_id, p.slug, p.sku, pt.name, 
 				pt.description, p.price, p.discount, 
@@ -177,10 +171,11 @@ export class ProductService {
 
 	//================  Приватный метод для получения списка товаров
 	private async _getProducts(
-		searchParams: IProductSearchParams,
+		categoryId: number,
+		searchParams: ProductsRequestParams,
 		withQueryFilters: Prisma.Sql,
-	): Promise<IProduct[]> {
-		const { categoryId, page, limit, sortBy, lang } = searchParams;
+	): Promise<Product[]> {
+		const { page, limit, sortBy, lang } = searchParams;
 		const offset = page > 0 ? limit * (page - 1) : 0;
 
 		return await this.prisma.$queryRaw`
@@ -212,16 +207,16 @@ export class ProductService {
 		categoryId: number,
 		locale: string,
 		all: boolean = false,
-	): Promise<IAttributeMap> {
+	): Promise<FacetsMap> {
 		const isFilterable = all ? "all" : "some";
 		const hashKey = `${categoryId}::${locale}::${isFilterable}::attributes`;
 		const cachedAttributes = await this.cacheService.get<string>(hashKey);
 
 		if (cachedAttributes) {
-			return JSON.parse(cachedAttributes) as IAttributeMap;
+			return JSON.parse(cachedAttributes) as FacetsMap;
 		}
 
-		const attributes: IAttribute[] = await this.prisma.$queryRaw`
+		const attributes: Attribute[] = await this.prisma.$queryRaw`
 			SELECT distinct on (a.id) 
 				a.id, a.alias, a.type, at.name,
 				at.description, u.display_value, a.order
@@ -238,15 +233,15 @@ export class ProductService {
 					at.description, u.display_value
 			`;
 
-		const attributesMap: IAttributeMap = {};
+		const facetsMap: FacetsMap = {};
 		for (const attr of attributes) {
-			const attrWithOptions: IAttributeWithOption = { ...attr, options: [] };
-			attributesMap[attr.alias] = attrWithOptions;
+			const facet: TypedFacet = { ...attr, options: [] };
+			facetsMap[attr.alias] = facet;
 		}
 
-		await this.cacheService.set(hashKey, JSON.stringify(attributesMap), 1000 * 60 * 10);
+		await this.cacheService.set(hashKey, JSON.stringify(facetsMap), 1000 * 60 * 10);
 
-		return attributesMap;
+		return facetsMap;
 	}
 
 	//================  Приватный метод для получения отмечаемых опций аттрибутов
@@ -254,7 +249,7 @@ export class ProductService {
 		categoryId: number,
 		alias: string,
 		withFiltersQueryByAlias: Prisma.Sql,
-	): Promise<ISelectableOption[]> {
+	): Promise<AttributeStringOption[] | AttributeNumberOption[] | AttributeBooleanOption[]> {
 		return this.prisma.$queryRaw`
         WITH         
         ${withFiltersQueryByAlias ? Prisma.sql`partial_filters AS (${withFiltersQueryByAlias}),` : Prisma.empty}        
@@ -279,14 +274,16 @@ export class ProductService {
 	}
 
 	//================  Приватный метод для получения опций аттрибутов с диапазоном значений
-	private async _getRangeOptions(categoryId: number): Promise<IRangeOption[]> {
-		const cachedOptions = await this.cacheService.get<IRangeOption[]>(`${categoryId}::ranges`);
+	private async _getRangeOptions(categoryId: number): Promise<AttributeRangeOption[]> {
+		const cachedOptions = await this.cacheService.get<AttributeRangeOption[]>(
+			`${categoryId}::ranges`,
+		);
 
 		if (cachedOptions) {
 			return cachedOptions;
 		}
 
-		const numericOptions: IRangeOption[] = await this.prisma.$queryRaw`
+		const numericOptions: AttributeRangeOption[] = await this.prisma.$queryRaw`
 			SELECT ranges.alias,
 				jsonb_build_object(
 					'min', MIN(ranges.value),
