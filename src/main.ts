@@ -28,10 +28,18 @@ async function bootstrap() {
 
 	const document = SwaggerModule.createDocument(app, config);
 
+	document.tags = [
+		{ name: "Auth" },
+		{ name: "Category" },
+		{ name: "Products" },
+		{ name: "Reviews" },
+		{ name: "Cart" },
+	];
+
 	SwaggerModule.setup("docs", app, document, {
 		swaggerOptions: {
-			tagsSorter: "alpha",
-			operationsSorter: "alpha",
+			tagsSorter: null,
+			operationsSorter: null,
 		},
 	});
 
