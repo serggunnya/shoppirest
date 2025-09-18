@@ -8,21 +8,38 @@ import { ProductService } from "./product.service";
 import { FacetSwaggerDoc } from "./swagger/Facet.swagger";
 import { ProductResponseSwaggerDoc, ProductSwaggerDoc } from "./swagger/Product.swagger";
 
-const example = `
-	{ 
-    "brand": { "val": ["Apple","Samsung","Xiaomi"]}, 
-    "ram": { "val": [4096, 8192]}, 
-    "storage": { "val": [65536, 262144]}, 
-    "price": { "min": 45000},
-    "screen_size": { "max": 6.4},
-    "net5g": { "val": [true]}
-	}
-	`;
+const exampleBody = {
+	brand: { val: ["Apple", "Samsung", "Xiaomi"] },
+	ram: { val: [4096, 8192] },
+	storage: { val: [65536, 262144] },
+	price: { min: 45000 },
+	screen_size: { max: 6.4 },
+	net5g: { val: [true] },
+};
 
 @ApiTags("Products")
 @Controller("products")
 export class ProductController {
 	constructor(private productService: ProductService) {}
+
+	//---------------------------------------------------------------------------
+	@Post("/facets")
+	@Version("1")
+	@ApiQuery({ name: "category", required: true, default: "smartphones" })
+	@ApiQuery({ name: "lang", required: false, default: "ru" })
+	@ApiBody({
+		required: false,
+		schema: { type: `object`, example: exampleBody },
+	})
+	@ApiResponse({ status: 200, type: FacetSwaggerDoc, isArray: true })
+	@ApiResponse({ status: 400, description: "Bad request" })
+	@ApiOperation({ summary: "Get list of all or filtered attributes with available options" })
+	getFacetsByCategoryIdV1(
+		@Query() facetRequestParams: FacetRequestParamsDto,
+		@Body() filtersRequestData: FiltersRequestData,
+	) {
+		return this.productService.getFacets(facetRequestParams, filtersRequestData);
+	}
 
 	//---------------------------------------------------------------------------
 	@Post("/search")
@@ -34,13 +51,11 @@ export class ProductController {
 	@ApiQuery({ name: "lang", required: false, default: "ru" })
 	@ApiBody({
 		required: false,
-		schema: { type: `object` },
-		description: `Product filters example 
-			${example}
-		`,
+		schema: { type: `object`, example: exampleBody },
 	})
 	@ApiResponse({ status: 200, type: ProductResponseSwaggerDoc })
-	@ApiOperation({ summary: "Get list of products", operationId: "1" })
+	@ApiResponse({ status: 400, description: "Bad request" })
+	@ApiOperation({ summary: "Get list of products" })
 	searchProducts(
 		@Query() searchParams: ProductParamsDto,
 		@Body() filtersRequestData: FiltersRequestData,
@@ -49,33 +64,14 @@ export class ProductController {
 	}
 
 	//---------------------------------------------------------------------------
-	@Post("/facets")
-	@Version("1")
-	@ApiQuery({ name: "category", required: true, default: "smartphones" })
-	@ApiQuery({ name: "lang", required: false, default: "ru" })
-	@ApiBody({
-		required: false,
-		description: `Product facets example 
-			${example}
-		`,
-		schema: { type: `object` },
-	})
-	@ApiResponse({ status: 200, type: FacetSwaggerDoc, isArray: true })
-	@ApiOperation({ summary: "Get list of all or filtered attributes with available options" })
-	getFacetsByCategoryIdV1(
-		@Query() facetRequestParams: FacetRequestParamsDto,
-		@Body() filtersRequestData: FiltersRequestData,
-	) {
-		return this.productService.getFacets(facetRequestParams, filtersRequestData);
-	}
-
-	//---------------------------------------------------------------------------
 	@Get(":slug")
 	@Version("1")
 	@ApiParam({ name: "slug", required: true })
 	@ApiQuery({ name: "lang", required: false, default: "ru" })
 	@ApiResponse({ status: 200, type: ProductSwaggerDoc })
-	@ApiOperation({ summary: "Get product by Id" })
+	@ApiResponse({ status: 404, description: "Product not found" })
+	@ApiResponse({ status: 400, description: "Bad request" })
+	@ApiOperation({ summary: "Get product by slug" })
 	getProductById(@Param("slug") slug: string, @Query("lang") locale: string = "ru") {
 		return this.productService.getProductDetails(slug, locale);
 	}
