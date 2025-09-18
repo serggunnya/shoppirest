@@ -12,8 +12,9 @@ export class CategoryController {
 	@Get("/")
 	@Version("1")
 	@ApiQuery({ name: "lang", required: false, default: "ru" })
-	@ApiOperation({ summary: "Get list of all categories", operationId: "1" })
+	@ApiOperation({ summary: "Get list of all categories" })
 	@ApiResponse({ status: 200, type: CategorySwaggerDoc, isArray: true })
+	@ApiResponse({ status: 400, description: "Bad request" })
 	allCategories(@Query("lang") lang: string = "ru") {
 		return this.categoryService.getAllCategories(lang);
 	}
@@ -22,8 +23,10 @@ export class CategoryController {
 	@Version("1")
 	@ApiParam({ name: "slug", required: true })
 	@ApiQuery({ name: "lang", required: true, default: "ru" })
-	@ApiOperation({ summary: "Get category id by slug", operationId: "2" })
+	@ApiOperation({ summary: "Get category by slug" })
 	@ApiResponse({ status: 200, type: CategorySwaggerDoc })
+	@ApiResponse({ status: 404, description: "Category not found" })
+	@ApiResponse({ status: 400, description: "Bad request" })
 	categoryBySlug(@Param("slug") slug: string, @Query("lang") lang: string) {
 		return this.categoryService.getCategoryBySlug(slug, lang);
 	}
