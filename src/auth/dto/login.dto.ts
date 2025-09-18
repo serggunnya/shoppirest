@@ -1,8 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IUserCredentials } from "auth/interfaces/auth.interface";
 import { IsEmail, IsNotEmpty, IsString } from "class-validator";
 
-export class LoginDto implements IUserCredentials {
+import { ILoginDto } from "auth/interfaces/auth.interface";
+
+export class LoginDto implements ILoginDto {
 	@ApiProperty()
 	@IsEmail()
 	@IsNotEmpty()

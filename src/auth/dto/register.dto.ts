@@ -1,8 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IUserDto } from "auth/interfaces/auth.interface";
 import { IsEmail, IsNotEmpty, IsString } from "class-validator";
 
-export class RegisterDto implements IUserDto {
+import { IRegisterDto } from "auth/interfaces/auth.interface";
+
+export class RegisterDto implements IRegisterDto {
 	@ApiProperty()
 	@IsString()
 	@IsNotEmpty()

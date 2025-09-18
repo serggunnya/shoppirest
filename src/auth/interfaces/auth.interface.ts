@@ -1,6 +1,16 @@
 import { addresses, users } from "@prisma/client";
 import { Request } from "express";
 
+export interface ILoginDto {
+	email: string;
+	password: string;
+}
+
+export interface IRegisterDto extends ILoginDto {
+	firstname: string;
+	lastname: string;
+}
+
 interface JwtAccessPayload {
 	userId: number;
 	email: string;
@@ -14,35 +24,27 @@ interface JwtRefreshPayload extends JwtAccessPayload {
 export type RequestWithUser = Request & { user: JwtAccessPayload };
 export type RequestWithToken = Request & { user: JwtRefreshPayload };
 
-export interface IToken {
+export interface AuthTokens {
 	access_token: string;
-}
-
-export interface IJwtTokens extends IToken {
 	refresh_token: string;
 }
 
-export interface IUserCredentials {
-	email: string;
-	password: string;
+export interface AuthResponse {
+	status: number;
+	message: string;
 }
 
-export interface IUserDto extends IUserCredentials {
-	firstname: string;
-	lastname: string;
-}
-
-enum ERoles {
+export enum ERoles {
 	ADMIN = "ADMIN",
 	CUSTOMER = "CUSTOMER",
 }
 
-enum ELanguages {
+export enum ELanguages {
 	ru = "ru",
 	en = "en",
 }
 
-enum ECurrency {
+export enum ECurrency {
 	RUB = "RUB",
 	USD = "USD",
 }

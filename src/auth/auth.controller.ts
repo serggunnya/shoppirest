@@ -7,6 +7,7 @@ import { AuthService } from "auth/auth.service";
 import { LoginDto } from "auth/dto/login.dto";
 import { AuthResponseSwaggerDoc } from "auth/swagger/authResponseSwaggerDoc";
 
+import { UserDto } from "./dto/user.dto";
 import { RequestWithToken, RequestWithUser } from "./interfaces/auth.interface";
 
 @ApiTags("Auth")
@@ -14,41 +15,43 @@ import { RequestWithToken, RequestWithUser } from "./interfaces/auth.interface";
 export class AuthController {
 	constructor(private authService: AuthService) {}
 
-	// @Post("register")
-	// @Version("1")
-	// @ApiOperation({ summary: "Register a new user", operationId: "1" })
-	// @ApiResponse({
-	// 	status: 201,
-	// 	description: "User registered successfully",
-	// 	type: AuthResponseSwaggerDoc,
-	// })
-	// @ApiResponse({ status: 403, description: "Credentials taken" })
-	// @ApiBody({ type: RegisterDto })
-	// register(@Body() userData: RegisterDto, @Res({ passthrough: true }) res: Response) {
-	// 	return this.authService.register(userData, res);
-	// }
-
 	@Post("login")
 	@Version("1")
-	@ApiOperation({ summary: "Login with credentials", operationId: "2" })
+	@ApiOperation({ summary: "Login with credentials" })
 	@ApiResponse({ status: 200, description: "Login successful", type: AuthResponseSwaggerDoc })
 	@ApiResponse({ status: 403, description: "Credentials incorrect" })
+	@ApiResponse({ status: 400, description: "Bad request" })
 	@ApiBody({ type: LoginDto })
 	login(@Body() credentials: LoginDto, @Res({ passthrough: true }) res: Response) {
 		return this.authService.login(credentials, res);
+	}
+
+	@Get("me")
+	@Version("1")
+	@ApiBearerAuth()
+	@UseGuards(AuthGuard("jwt"))
+	@ApiOperation({ summary: "Get user data" })
+	@ApiResponse({ status: 200, description: "User info retrieved successfully", type: UserDto })
+	@ApiResponse({ status: 400, description: "Bad request" })
+	@ApiResponse({ status: 401, description: "Unauthorized" })
+	@ApiResponse({ status: 404, description: "User not found" })
+	getUser(@Req() req: RequestWithUser) {
+		const userId = req.user.userId;
+		return this.authService.getUser(userId);
 	}
 
 	@Post("refresh")
 	@Version("1")
 	@ApiBearerAuth()
 	@UseGuards(AuthGuard("jwt-refresh"))
-	@ApiOperation({ summary: "Refresh all tokens", operationId: "6" })
+	@ApiOperation({ summary: "Refresh all tokens" })
 	@ApiResponse({
 		status: 200,
 		description: "Token refreshed successfully",
 		type: AuthResponseSwaggerDoc,
 	})
 	@ApiResponse({ status: 401, description: "Unauthorized" })
+	@ApiResponse({ status: 400, description: "Bad request" })
 	refresh(@Req() req: RequestWithToken, @Res({ passthrough: true }) res: Response) {
 		const userId = req.user.userId;
 		const tokenId = req.user.tokenId;
@@ -59,9 +62,14 @@ export class AuthController {
 	@Version("1")
 	@ApiBearerAuth()
 	@UseGuards(AuthGuard("jwt-refresh"))
-	@ApiOperation({ summary: "Logout", operationId: "4" })
-	@ApiResponse({ status: 200, description: "Successfully logged out" })
+	@ApiOperation({ summary: "Logout" })
+	@ApiResponse({
+		status: 200,
+		description: "Successfully logged out",
+		type: AuthResponseSwaggerDoc,
+	})
 	@ApiResponse({ status: 401, description: "Unauthorized" })
+	@ApiResponse({ status: 400, description: "Bad request" })
 	logout(@Req() req: RequestWithToken, @Res({ passthrough: true }) res: Response) {
 		const userId = req.user.userId;
 		const tokenId = req.user.tokenId;
@@ -72,24 +80,16 @@ export class AuthController {
 	@Version("1")
 	@UseGuards(AuthGuard("jwt"))
 	@ApiBearerAuth()
-	@ApiOperation({ summary: "Logout from all devices", operationId: "5" })
-	@ApiResponse({ status: 200, description: "Successfully logged out from all devices" })
+	@ApiOperation({ summary: "Logout from all devices" })
+	@ApiResponse({
+		status: 200,
+		description: "Successfully logged out from all devices",
+		type: AuthResponseSwaggerDoc,
+	})
 	@ApiResponse({ status: 401, description: "Unauthorized" })
+	@ApiResponse({ status: 400, description: "Bad request" })
 	logoutAll(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response) {
 		const userId = req.user.userId;
 		return this.authService.logoutFromAllDevices(userId, res);
-	}
-
-	@Get("me")
-	@Version("1")
-	@ApiBearerAuth()
-	@UseGuards(AuthGuard("jwt"))
-	@ApiOperation({ summary: "Get current user info", operationId: "3" })
-	@ApiResponse({ status: 200, description: "User info retrieved successfully" })
-	@ApiResponse({ status: 401, description: "Unauthorized" })
-	@ApiOperation({ summary: "Get user data" })
-	getUser(@Req() req: RequestWithUser) {
-		const userId = req.user.userId;
-		return this.authService.getUser(userId);
 	}
 }

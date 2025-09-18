@@ -2,8 +2,12 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class AuthResponseSwaggerDoc {
 	@ApiProperty({
-		example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-		description: "JWT access token",
+		example: 200,
 	})
-	access_token: string;
+	status: number;
+
+	@ApiProperty({
+		example: "Operation message",
+	})
+	message: string;
 }
