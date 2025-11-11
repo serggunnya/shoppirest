@@ -3,8 +3,47 @@ import { Prisma } from "@prisma/client";
 export const categories: Prisma.categoriesCreateInput[] = [
 	{
 		// id: 1,
+		slug: "main",
+		path: "/",
+		is_active: true,
+		translations: {
+			create: [
+				{
+					locale: "ru",
+					name: "Главная",
+				},
+				{
+					locale: "en",
+					name: "Main",
+				},
+			],
+		},
+	},
+	{
+		// id: 2,
+		slug: "catalog",
+		path: "/catalog",
+		parent: { connect: { id: 1 } },
+		is_active: true,
+		translations: {
+			create: [
+				{
+					locale: "ru",
+					name: "Каталог",
+				},
+				{
+					locale: "en",
+					name: "Сatalog",
+				},
+			],
+		},
+	},
+	{
+		// id: 3,
 		slug: "gadgets",
+		path: "/catalog/gadgets",
 		image: "/images/categories/gadgets.jpg",
+		parent: { connect: { id: 2 } },
 		is_active: true,
 		translations: {
 			create: [
@@ -22,9 +61,10 @@ export const categories: Prisma.categoriesCreateInput[] = [
 		},
 	},
 	{
-		// id: 2,
+		// id: 4,
 		slug: "smartphones",
-		parent: { connect: { id: 1 } },
+		path: "/catalog/gadgets/smartphones",
+		parent: { connect: { id: 3 } },
 		image: "/images/categories/smartphones.jpg",
 		is_active: true,
 		translations: {
@@ -43,9 +83,10 @@ export const categories: Prisma.categoriesCreateInput[] = [
 		},
 	},
 	{
-		// id: 3,
+		// id: 5,
 		slug: "tablets",
-		parent: { connect: { id: 1 } },
+		path: "/catalog/gadgets/tablets",
+		parent: { connect: { id: 3 } },
 		image: "/images/categories/tablets.jpg",
 		is_active: true,
 		translations: {
@@ -64,9 +105,11 @@ export const categories: Prisma.categoriesCreateInput[] = [
 		},
 	},
 	{
-		// id: 4,
+		// id: 6,
 		slug: "home-appliances",
+		path: "/catalog/home-appliances",
 		image: "/images/categories/home-appliances.jpg",
+		parent: { connect: { id: 2 } },
 		is_active: true,
 		translations: {
 			create: [
@@ -84,9 +127,10 @@ export const categories: Prisma.categoriesCreateInput[] = [
 		},
 	},
 	{
-		// id: 5,
+		// id: 7,
 		slug: "tvs",
-		parent: { connect: { id: 4 } },
+		path: "/catalog/home-appliances/tvs",
+		parent: { connect: { id: 6 } },
 		image: "/images/categories/tvs.jpg",
 		is_active: true,
 		translations: {
@@ -105,9 +149,11 @@ export const categories: Prisma.categoriesCreateInput[] = [
 		},
 	},
 	{
-		// id: 6,
+		// id: 8,
 		slug: "computers-and-laptops",
+		path: "/catalog/computers-and-laptops",
 		image: "/images/categories/computers-and-laptops.jpg",
+		parent: { connect: { id: 2 } },
 		is_active: true,
 		translations: {
 			create: [
@@ -125,9 +171,10 @@ export const categories: Prisma.categoriesCreateInput[] = [
 		},
 	},
 	{
-		// id: 7,
+		// id: 9,
 		slug: "laptops",
-		parent: { connect: { id: 6 } },
+		path: "/catalog/computers-and-laptops/laptops",
+		parent: { connect: { id: 8 } },
 		image: "/images/categories/laptops.jpg",
 		is_active: true,
 		translations: {

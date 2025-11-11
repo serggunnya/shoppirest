@@ -36,7 +36,7 @@ model users {
   language      Language    @default(ru)    // Предпочитаемый язык
   currency      String      @default("RUB") // Предпочитаемая валюта
   created_at    DateTime    @default(now())
-  updated_at    DateTime    @updatedAt
+  updated_at    DateTime    @default(now()) @updatedAt
 
   addresses       addresses[]
   cart            carts?
@@ -57,7 +57,7 @@ model addresses {
   zipcode       String
   is_default    Boolean     @default(false)
   created_at    DateTime    @default(now())
-  updated_at    DateTime    @updatedAt
+  updated_at    DateTime    @default(now()) @updatedAt
 
   user          users       @relation(fields: [user_id], references: [id])
   orders        orders[]
@@ -72,7 +72,7 @@ model refresh_tokens {
   expires_at    DateTime
   revoked       Boolean   @default(false)
   created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  updated_at    DateTime  @default(now()) @updatedAt
   
   user          users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   
@@ -85,10 +85,11 @@ model categories {
   id              Int         @id @default(autoincrement())
   slug            String      @unique
   image           String?
-  parent_id       Int?        
+  parent_id       Int?
+  path            String       
   is_active       Boolean     @default(true)
   created_at      DateTime    @default(now())
-  updated_at      DateTime    @updatedAt  
+  updated_at      DateTime    @default(now()) @updatedAt
   
   parent          categories?   @relation("CategoryTree", fields: [parent_id], references: [id])
   children        categories[]  @relation("CategoryTree")
@@ -107,7 +108,7 @@ model category_translations {
   name          String
   description   String?
   created_at    DateTime   @default(now())
-  updated_at    DateTime   @updatedAt
+  updated_at    DateTime   @default(now()) @updatedAt
   
   category      categories   @relation(fields: [category_id], references: [id])
 
@@ -131,7 +132,7 @@ model attributes {
   is_filterable Boolean     @default(true)
   order         Int         @default(0)
   created_at    DateTime    @default(now())
-  updated_at    DateTime    @updatedAt    
+  updated_at    DateTime    @default(now()) @updatedAt    
   translations  attribute_translations[]
   categories    category_attributes[]
   units         attribute_units[]
@@ -146,7 +147,7 @@ model attribute_translations {
   name          String
   description   String?
   created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  updated_at    DateTime  @default(now()) @updatedAt
   attribute     attributes @relation(fields: [attribute_id], references: [id])
 
   @@index([attribute_id])
@@ -157,7 +158,7 @@ model attribute_units {
   attribute_id   Int
   unit_id        Int
   created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  updated_at    DateTime  @default(now()) @updatedAt
   
   attributes    attributes @relation(fields: [attribute_id], references: [id])
   units         units      @relation(fields: [unit_id], references: [id])
@@ -172,7 +173,7 @@ model units {
   locale           String
   display_value    Json?     @db.JsonB
   created_at       DateTime  @default(now())
-  updated_at       DateTime  @updatedAt
+  updated_at       DateTime  @default(now()) @updatedAt
   attribute_units  attribute_units[]
 
   @@index([locale])
@@ -184,7 +185,7 @@ model category_attributes {
   category_id   Int
   attribute_id  Int 
   created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt 
+  updated_at    DateTime  @default(now()) @updatedAt 
   
   category      categories  @relation(fields: [category_id], references: [id])
   attribute     attributes @relation(fields: [attribute_id], references: [id])
@@ -214,7 +215,7 @@ model products {
   // }
   is_active      Boolean    @default(true)
   created_at    DateTime    @default(now())
-  updated_at    DateTime    @updatedAt
+  updated_at    DateTime    @default(now()) @updatedAt
   
   category      categories    @relation(fields: [category_id], references: [id])  
   translations  product_translations[]
@@ -239,7 +240,7 @@ model product_translations {
   meta_title      String?
   meta_description String?
   created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
+  updated_at      DateTime  @default(now()) @updatedAt
   
   product         products   @relation(fields: [product_id], references: [id])
 
@@ -253,7 +254,7 @@ model product_images {
   url           String
   order         Int       @default(0)
   created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  updated_at    DateTime  @default(now()) @updatedAt
   
   product       products  @relation(fields: [product_id], references: [id])
   
@@ -269,7 +270,7 @@ model reviews {
   text          String?
   is_moderated  Boolean     @default(false)
   created_at    DateTime    @default(now())
-  updated_at    DateTime    @updatedAt
+  updated_at    DateTime    @default(now()) @updatedAt
   
   product       products    @relation(fields: [product_id], references: [id])
   user          users       @relation(fields: [user_id], references: [id])
@@ -283,7 +284,7 @@ model carts {
   id            Int       @id @default(autoincrement())
   user_id       Int       @unique
   created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  updated_at    DateTime  @default(now()) @updatedAt
   
   user          users     @relation(fields: [user_id], references: [id])
   items         cart_items[]
@@ -296,7 +297,7 @@ model cart_items {
   product_id    Int
   quantity      Int
   created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  updated_at    DateTime  @default(now()) @updatedAt
   
   cart          carts      @relation(fields: [cart_id], references: [id])
   product       products   @relation(fields: [product_id], references: [id])
@@ -345,7 +346,7 @@ model orders {
   paymentMethod PaymentMethod
   paymentStatus PaymentStatus @default(PENDING)
   created_at    DateTime      @default(now())
-  updated_at    DateTime      @updatedAt
+  updated_at    DateTime      @default(now()) @updatedAt
   
   user          users         @relation(fields: [user_id], references: [id])
   address       addresses     @relation(fields: [address_id], references: [id])
@@ -364,7 +365,7 @@ model order_items {
   quantity      Int
   price         Decimal   @db.Decimal(10,2)
   created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  updated_at    DateTime  @default(now()) @updatedAt
 
   order         orders    @relation(fields: [order_id], references: [id])
   product       products  @relation(fields: [product_id], references: [id])
