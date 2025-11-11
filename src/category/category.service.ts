@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import { Cache } from "cache-manager";
 
 import { PrismaService } from "../prisma/prisma.service";
-import { Category } from "./interfaces/category.interface";
+import { Category, CategoryExtended, CategoryResponse } from "./interfaces/category.interface";
 
 @Injectable()
 export class CategoryService {
@@ -13,7 +13,7 @@ export class CategoryService {
 		@Inject(CACHE_MANAGER) private cacheService: Cache,
 	) {}
 
-	// Метод получения категорий
+	// ---------- Метод получения категорий
 	async getAllCategories(locale: string): Promise<Category[]> {
 		return await this.prisma.$queryRaw`
 			select 
@@ -24,54 +24,83 @@ export class CategoryService {
 		`;
 	}
 
-	// Метод получения категории по слагу
-	async getCategoryBySlug(slug: string, lang: string): Promise<Category> {
+	// ---------- Метод получения данных категории по slug
+	async getCategoryDataBySlug(slug: string, lang: string): Promise<CategoryResponse> {
+		// Проверяем кэш
 		const cacheKey = `category:${slug}:${lang}`;
-		const cachedCategory = await this.cacheService.get<Category>(cacheKey);
+		const cachedCategoryResonse = await this.cacheService.get<string>(cacheKey);
 
-		if (cachedCategory) {
-			return cachedCategory;
+		if (cachedCategoryResonse) {			
+			return JSON.parse(cachedCategoryResonse) as CategoryResponse;
 		}
 
-		const baseQueryRaw = Prisma.sql`
-        WITH RECURSIVE CategoryWithTranslation AS (
-            -- Базовая часть: находим основную категорию по slug
-            SELECT c.*, ct.name, ct.description
-            FROM categories c
-            JOIN category_translations ct ON ct.category_id = c.id AND ct.locale = ${lang}
-            WHERE c.is_active = TRUE AND c.slug = ${slug}
-            UNION ALL
-            -- Рекурсивная часть: находим прямых потомков категории
-            SELECT c_child.*, ct_child.name, ct_child.description
-            FROM categories c_child
-            JOIN category_translations ct_child ON ct_child.category_id = c_child.id AND ct_child.locale = ${lang}
-            JOIN CategoryWithTranslation p ON c_child.parent_id = p.id
-            WHERE c_child.is_active = TRUE
-        )
-        SELECT * FROM CategoryWithTranslation;
-    `;
-
-		const categoriesAndChildren: Category[] = await this.prisma.$queryRaw(baseQueryRaw);
-
-		if (categoriesAndChildren.length === 0) {
+		// Получаем ветку категорий
+		const categoryBranch: CategoryExtended[]  = await this._getRawCategoryBranch(slug, lang);
+		
+		const selfCategory = categoryBranch.find(cat => cat.type === 'self');
+		if (!selfCategory) {
 			return null;
 		}
 
-		// Находим родительскую категорию
-		const parentCategory = categoriesAndChildren.find((c) => c.slug === slug);
+		const breadcrumbs = categoryBranch
+			.filter(cat => cat.type === 'ancestor')
+			.sort((a, b) => (b.level!- a.level!));
 
-		if (!parentCategory) {
-			return null;
-		}
+		const children = categoryBranch.filter(cat => cat.type === 'child');
 
-		// Находим дочерние категории
-		const childrenCategories = categoriesAndChildren.filter((c) => c.id !== parentCategory.id);
+		// Формируем ответ
+		const categoryResonse: CategoryResponse = {
+			...selfCategory,
+			breadcrumbs,
+			children,
+		};
 
-		parentCategory.children = childrenCategories;
-
+		// Сохраняем в кэш ветку категорий
 		const cache_ttl = 1000 * 60 * 10;
-		await this.cacheService.set(cacheKey, parentCategory, cache_ttl);
+		await this.cacheService.set(cacheKey,JSON.stringify(categoryResonse), cache_ttl);
 
-		return parentCategory;
+		return categoryResonse;		
+	}
+
+	// ---------- приватный метод получения ветки категорий (предки, текущая, дети)
+	private async _getRawCategoryBranch(slug:string, lang:string): Promise<CategoryExtended[]> {	
+		const queryRaw = Prisma.sql`
+				WITH RECURSIVE 
+					Ancestors AS (
+							SELECT 
+									c.id, c.slug, c.parent_id, 
+									ct.name, ct.description, 
+									0 as level -- Уровень вложенности, 0 для стартовой
+							FROM categories c
+							JOIN category_translations ct ON ct.category_id = c.id AND ct.locale = ${lang}
+							WHERE c.is_active = TRUE AND c.slug = ${slug}
+							UNION ALL
+							SELECT 
+									c.id, c.slug, c.parent_id, 
+									ct.name, ct.description, 
+									a.level + 1 as level
+							FROM categories c
+							JOIN category_translations ct ON ct.category_id = c.id AND ct.locale = ${lang}
+							JOIN Ancestors a ON c.id = a.parent_id -- Присоединяем родителя из предыдущего шага
+							WHERE c.is_active = TRUE
+					),
+					Children AS (
+							SELECT 
+									c.id, c.slug, c.parent_id, 
+									ct.name, ct.description
+							FROM categories c
+							JOIN category_translations ct ON ct.category_id = c.id AND ct.locale = ${lang}
+							WHERE c.is_active = TRUE AND c.parent_id = (SELECT id FROM categories WHERE slug = ${slug})
+					)
+				SELECT id, slug, parent_id, name, description, level, 'self' as type 
+				FROM Ancestors WHERE level = 0 -- Сама категория
+				UNION ALL
+				SELECT id, slug, parent_id, name, description, level, 'ancestor' as type 
+				FROM Ancestors WHERE level > 0 -- Ее предки
+				UNION ALL
+				SELECT id, slug, parent_id, name, description, NULL as level, 'child' as type 
+				FROM Children; -- Ее дети
+		`
+		return await this.prisma.$queryRaw(queryRaw)
 	}
 }
