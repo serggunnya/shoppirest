@@ -5,7 +5,7 @@ export interface Category {
 	description: string | null;
 	parent_id: number | null;
 	path: string;
-	image: string | null;	
+	image: string | null;
 	created_at: Date;
 	updated_at: Date;
 }
@@ -15,7 +15,7 @@ export interface CategoryExtended extends Category {
 	type: "self" | "ancestor" | "child";
 }
 
-export interface CategoryResponse extends CategoryExtended {	
+export interface CategoryDataResponse extends CategoryExtended {
 	breadcrumbs: CategoryExtended[];
 	children?: CategoryExtended[];
 }

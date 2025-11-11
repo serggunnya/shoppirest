@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import { Cache } from "cache-manager";
 
 import { PrismaService } from "../prisma/prisma.service";
-import { Category, CategoryExtended, CategoryResponse } from "./interfaces/category.interface";
+import { Category, CategoryDataResponse, CategoryExtended } from "./interfaces/category.interface";
 
 @Injectable()
 export class CategoryService {
@@ -17,7 +17,7 @@ export class CategoryService {
 	async getAllCategories(locale: string): Promise<Category[]> {
 		return await this.prisma.$queryRaw`
 			select 
-				c.id, c.slug, ct."name", ct.description, 
+				c.id, c.slug, ct."name", ct.description, c.path,
 				c.image, c.parent_id from categories c 
 			join category_translations ct on ct.category_id = c.id
 			where ct.locale = ${locale}
@@ -25,31 +25,31 @@ export class CategoryService {
 	}
 
 	// ---------- Метод получения данных категории по slug
-	async getCategoryDataBySlug(slug: string, lang: string): Promise<CategoryResponse> {
+	async getCategoryDataBySlug(slug: string, lang: string): Promise<CategoryDataResponse> {
 		// Проверяем кэш
 		const cacheKey = `category:${slug}:${lang}`;
 		const cachedCategoryResonse = await this.cacheService.get<string>(cacheKey);
 
-		if (cachedCategoryResonse) {			
-			return JSON.parse(cachedCategoryResonse) as CategoryResponse;
+		if (cachedCategoryResonse) {
+			return JSON.parse(cachedCategoryResonse) as CategoryDataResponse;
 		}
 
 		// Получаем ветку категорий
-		const categoryBranch: CategoryExtended[]  = await this._getRawCategoryBranch(slug, lang);
-		
-		const selfCategory = categoryBranch.find(cat => cat.type === 'self');
+		const categoryBranch: CategoryExtended[] = await this._getRawCategoryBranch(slug, lang);
+
+		const selfCategory = categoryBranch.find((cat) => cat.type === "self");
 		if (!selfCategory) {
 			return null;
 		}
 
 		const breadcrumbs = categoryBranch
-			.filter(cat => cat.type === 'ancestor')
-			.sort((a, b) => (b.level!- a.level!));
+			.filter((cat) => cat.type === "ancestor")
+			.sort((a, b) => b.level! - a.level!);
 
-		const children = categoryBranch.filter(cat => cat.type === 'child');
+		const children = categoryBranch.filter((cat) => cat.type === "child");
 
 		// Формируем ответ
-		const categoryResonse: CategoryResponse = {
+		const categoryResonse: CategoryDataResponse = {
 			...selfCategory,
 			breadcrumbs,
 			children,
@@ -57,19 +57,19 @@ export class CategoryService {
 
 		// Сохраняем в кэш ветку категорий
 		const cache_ttl = 1000 * 60 * 10;
-		await this.cacheService.set(cacheKey,JSON.stringify(categoryResonse), cache_ttl);
+		await this.cacheService.set(cacheKey, JSON.stringify(categoryResonse), cache_ttl);
 
-		return categoryResonse;		
+		return categoryResonse;
 	}
 
 	// ---------- приватный метод получения ветки категорий (предки, текущая, дети)
-	private async _getRawCategoryBranch(slug:string, lang:string): Promise<CategoryExtended[]> {	
+	private async _getRawCategoryBranch(slug: string, lang: string): Promise<CategoryExtended[]> {
 		const queryRaw = Prisma.sql`
 				WITH RECURSIVE 
 					Ancestors AS (
 							SELECT 
 									c.id, c.slug, c.parent_id, 
-									ct.name, ct.description, 
+									ct.name, ct.description, c.path,
 									0 as level -- Уровень вложенности, 0 для стартовой
 							FROM categories c
 							JOIN category_translations ct ON ct.category_id = c.id AND ct.locale = ${lang}
@@ -77,7 +77,7 @@ export class CategoryService {
 							UNION ALL
 							SELECT 
 									c.id, c.slug, c.parent_id, 
-									ct.name, ct.description, 
+									ct.name, ct.description, c.path,
 									a.level + 1 as level
 							FROM categories c
 							JOIN category_translations ct ON ct.category_id = c.id AND ct.locale = ${lang}
@@ -87,20 +87,20 @@ export class CategoryService {
 					Children AS (
 							SELECT 
 									c.id, c.slug, c.parent_id, 
-									ct.name, ct.description
+									ct.name, ct.description, c.path
 							FROM categories c
 							JOIN category_translations ct ON ct.category_id = c.id AND ct.locale = ${lang}
 							WHERE c.is_active = TRUE AND c.parent_id = (SELECT id FROM categories WHERE slug = ${slug})
 					)
-				SELECT id, slug, parent_id, name, description, level, 'self' as type 
+				SELECT id, slug, parent_id, name, description, path, level, 'self' as type 
 				FROM Ancestors WHERE level = 0 -- Сама категория
 				UNION ALL
-				SELECT id, slug, parent_id, name, description, level, 'ancestor' as type 
+				SELECT id, slug, parent_id, name, description, path, level, 'ancestor' as type 
 				FROM Ancestors WHERE level > 0 -- Ее предки
 				UNION ALL
-				SELECT id, slug, parent_id, name, description, NULL as level, 'child' as type 
+				SELECT id, slug, parent_id, name, description, path, NULL as level, 'child' as type 
 				FROM Children; -- Ее дети
-		`
-		return await this.prisma.$queryRaw(queryRaw)
+		`;
+		return await this.prisma.$queryRaw(queryRaw);
 	}
 }

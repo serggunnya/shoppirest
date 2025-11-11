@@ -485,48 +485,48 @@ export const attributes: Prisma.attributesCreateInput[] = [
 
 export const categoryAttributes = [
 	// Смартфоны
-	{ category_id: 2, attribute_id: 1 }, // price
-	{ category_id: 2, attribute_id: 2 }, // brand
-	{ category_id: 2, attribute_id: 3 }, // color
-	{ category_id: 2, attribute_id: 4 }, // screen_size
-	{ category_id: 2, attribute_id: 5 }, // screen_res
-	{ category_id: 2, attribute_id: 6 }, // ram
-	{ category_id: 2, attribute_id: 7 }, // storage
-	{ category_id: 2, attribute_id: 9 }, // cpu_model
-	{ category_id: 2, attribute_id: 10 }, // gpu_model
-	{ category_id: 2, attribute_id: 11 }, // cpu_brand
-	{ category_id: 2, attribute_id: 12 }, // gpu_brand
-	{ category_id: 2, attribute_id: 13 }, // os
-	{ category_id: 2, attribute_id: 14 }, // os_ver
-	{ category_id: 2, attribute_id: 15 }, // screen_type
-	{ category_id: 2, attribute_id: 16 }, // rearcam_amt
-	{ category_id: 2, attribute_id: 17 }, // maincam_res
-	{ category_id: 2, attribute_id: 18 }, // frontcam_res
-	{ category_id: 2, attribute_id: 19 }, // net4g
-	{ category_id: 2, attribute_id: 20 }, // net5g
-	{ category_id: 2, attribute_id: 21 }, // fm_mod
-	{ category_id: 2, attribute_id: 22 }, // extra_mem
-	{ category_id: 2, attribute_id: 23 }, // btr_cap
-	{ category_id: 2, attribute_id: 24 }, // chrg_pwr
+	{ category_id: 4, attribute_id: 1 }, // price
+	{ category_id: 4, attribute_id: 2 }, // brand
+	{ category_id: 4, attribute_id: 3 }, // color
+	{ category_id: 4, attribute_id: 4 }, // screen_size
+	{ category_id: 4, attribute_id: 5 }, // screen_res
+	{ category_id: 4, attribute_id: 6 }, // ram
+	{ category_id: 4, attribute_id: 7 }, // storage
+	{ category_id: 4, attribute_id: 9 }, // cpu_model
+	{ category_id: 4, attribute_id: 10 }, // gpu_model
+	{ category_id: 4, attribute_id: 11 }, // cpu_brand
+	{ category_id: 4, attribute_id: 12 }, // gpu_brand
+	{ category_id: 4, attribute_id: 13 }, // os
+	{ category_id: 4, attribute_id: 14 }, // os_ver
+	{ category_id: 4, attribute_id: 15 }, // screen_type
+	{ category_id: 4, attribute_id: 16 }, // rearcam_amt
+	{ category_id: 4, attribute_id: 17 }, // maincam_res
+	{ category_id: 4, attribute_id: 18 }, // frontcam_res
+	{ category_id: 4, attribute_id: 19 }, // net4g
+	{ category_id: 4, attribute_id: 20 }, // net5g
+	{ category_id: 4, attribute_id: 21 }, // fm_mod
+	{ category_id: 4, attribute_id: 22 }, // extra_mem
+	{ category_id: 4, attribute_id: 23 }, // btr_cap
+	{ category_id: 4, attribute_id: 24 }, // chrg_pwr
 	// Телевизоры
-	{ category_id: 5, attribute_id: 1 }, // price
-	{ category_id: 5, attribute_id: 2 }, // brand
-	{ category_id: 5, attribute_id: 3 }, // color
-	{ category_id: 5, attribute_id: 4 }, // screen_size
-	{ category_id: 5, attribute_id: 5 }, // resolution
-	{ category_id: 5, attribute_id: 8 }, // smart_tv
-	{ category_id: 5, attribute_id: 6 }, // ram
-	{ category_id: 5, attribute_id: 7 }, // storage
-	// Ноутбуки
 	{ category_id: 7, attribute_id: 1 }, // price
 	{ category_id: 7, attribute_id: 2 }, // brand
 	{ category_id: 7, attribute_id: 3 }, // color
 	{ category_id: 7, attribute_id: 4 }, // screen_size
 	{ category_id: 7, attribute_id: 5 }, // resolution
+	{ category_id: 7, attribute_id: 8 }, // smart_tv
 	{ category_id: 7, attribute_id: 6 }, // ram
 	{ category_id: 7, attribute_id: 7 }, // storage
-	{ category_id: 7, attribute_id: 9 }, // processor
-	{ category_id: 7, attribute_id: 10 }, // graphics
+	// Ноутбуки
+	{ category_id: 9, attribute_id: 1 }, // price
+	{ category_id: 9, attribute_id: 2 }, // brand
+	{ category_id: 9, attribute_id: 3 }, // color
+	{ category_id: 9, attribute_id: 4 }, // screen_size
+	{ category_id: 9, attribute_id: 5 }, // resolution
+	{ category_id: 9, attribute_id: 6 }, // ram
+	{ category_id: 9, attribute_id: 7 }, // storage
+	{ category_id: 9, attribute_id: 9 }, // processor
+	{ category_id: 9, attribute_id: 10 }, // graphics
 ];
 
 export const units: Prisma.unitsCreateInput[] = [

@@ -41,7 +41,11 @@ export class ProductService {
 
 		let withQueryFilters: Prisma.Sql;
 		if (Object.keys(filtersBody).length !== 0) {
-			withQueryFilters = await this._withQueryFilters(categoryData.id, filtersBody, searchParams.lang);
+			withQueryFilters = await this._withQueryFilters(
+				categoryData.id,
+				filtersBody,
+				searchParams.lang,
+			);
 		}
 
 		const data = await this._getProducts(categoryData.id, searchParams, withQueryFilters);

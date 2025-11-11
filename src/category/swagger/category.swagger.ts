@@ -3,10 +3,10 @@ import { ApiProperty } from "@nestjs/swagger";
 export class CategoryDoc {
 	@ApiProperty()
 	id: number;
-	
+
 	@ApiProperty()
 	parent_id: number | null;
-	
+
 	@ApiProperty()
 	slug: string;
 
@@ -18,16 +18,15 @@ export class CategoryDoc {
 
 	@ApiProperty()
 	description: string | null;
-		
+
 	@ApiProperty()
-	image: string;	
+	image: string;
 
 	@ApiProperty()
 	createdAt: Date;
 }
 
-
-export class CategoryExtDoc extends  CategoryDoc {
+export class CategoryExtDoc extends CategoryDoc {
 	@ApiProperty()
 	level: number | null;
 
@@ -35,15 +34,13 @@ export class CategoryExtDoc extends  CategoryDoc {
 	type: "self" | "ancestor" | "child";
 }
 
-
-export class CategoryDataResponseDoc{
-	@ApiProperty({isArray: true, type: CategoryExtDoc})
+export class CategoryDataResponseDoc extends CategoryExtDoc {
+	@ApiProperty({ isArray: true, type: CategoryExtDoc })
 	breadcrumbs: CategoryExtDoc;
 
-	@ApiProperty({isArray: true, type: CategoryExtDoc})
+	@ApiProperty({ isArray: true, type: CategoryExtDoc })
 	children?: CategoryExtDoc;
 }
-
 
 export class AttributeSwaggerDoc {
 	@ApiProperty()

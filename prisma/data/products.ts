@@ -7,7 +7,7 @@ export const products: Prisma.productsCreateInput[] = [
 		price: 10999,
 		stock: 100,
 		is_active: true,
-		category: { connect: { id: 2 } },
+		category: { connect: { id: 4 } },
 		translations: {
 			create: [
 				{
@@ -55,7 +55,7 @@ export const products: Prisma.productsCreateInput[] = [
 		price: 9999,
 		stock: 100,
 		is_active: true,
-		category: { connect: { id: 2 } },
+		category: { connect: { id: 4 } },
 		translations: {
 			create: [
 				{
@@ -103,7 +103,7 @@ export const products: Prisma.productsCreateInput[] = [
 		price: 92999,
 		stock: 50,
 		is_active: true,
-		category: { connect: { id: 2 } },
+		category: { connect: { id: 4 } },
 		translations: {
 			create: [
 				{
@@ -151,7 +151,7 @@ export const products: Prisma.productsCreateInput[] = [
 		price: 20999,
 		stock: 50,
 		is_active: true,
-		category: { connect: { id: 2 } },
+		category: { connect: { id: 4 } },
 		translations: {
 			create: [
 				{
@@ -199,7 +199,7 @@ export const products: Prisma.productsCreateInput[] = [
 		price: 72000,
 		stock: 50,
 		is_active: true,
-		category: { connect: { id: 2 } },
+		category: { connect: { id: 4 } },
 		translations: {
 			create: [
 				{
@@ -247,7 +247,7 @@ export const products: Prisma.productsCreateInput[] = [
 		price: 70999,
 		stock: 50,
 		is_active: true,
-		category: { connect: { id: 2 } },
+		category: { connect: { id: 4 } },
 		translations: {
 			create: [
 				{
@@ -295,7 +295,7 @@ export const products: Prisma.productsCreateInput[] = [
 		price: 77999,
 		stock: 50,
 		is_active: true,
-		category: { connect: { id: 2 } },
+		category: { connect: { id: 4 } },
 		translations: {
 			create: [
 				{
@@ -343,7 +343,7 @@ export const products: Prisma.productsCreateInput[] = [
 		price: 80999,
 		stock: 50,
 		is_active: true,
-		category: { connect: { id: 2 } },
+		category: { connect: { id: 4 } },
 		translations: {
 			create: [
 				{
@@ -391,7 +391,7 @@ export const products: Prisma.productsCreateInput[] = [
 		price: 45499,
 		stock: 50,
 		is_active: true,
-		category: { connect: { id: 2 } },
+		category: { connect: { id: 4 } },
 		translations: {
 			create: [
 				{
@@ -439,7 +439,7 @@ export const products: Prisma.productsCreateInput[] = [
 		price: 30499,
 		stock: 50,
 		is_active: true,
-		category: { connect: { id: 2 } },
+		category: { connect: { id: 4 } },
 		translations: {
 			create: [
 				{
@@ -487,7 +487,7 @@ export const products: Prisma.productsCreateInput[] = [
 		price: 30499,
 		stock: 50,
 		is_active: true,
-		category: { connect: { id: 2 } },
+		category: { connect: { id: 4 } },
 		translations: {
 			create: [
 				{
@@ -535,7 +535,7 @@ export const products: Prisma.productsCreateInput[] = [
 		price: 56799,
 		stock: 50,
 		is_active: true,
-		category: { connect: { id: 2 } },
+		category: { connect: { id: 4 } },
 		translations: {
 			create: [
 				{
@@ -583,7 +583,7 @@ export const products: Prisma.productsCreateInput[] = [
 		price: 43499,
 		stock: 50,
 		is_active: true,
-		category: { connect: { id: 2 } },
+		category: { connect: { id: 4 } },
 		translations: {
 			create: [
 				{
